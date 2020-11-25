@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<launch>
+<arg name="rvizconfig" default="$(find pracownia_badawcza)/rviz/ompl.rviz" />
+<include file="$(find pracownia_badawcza)/launch/map.launch" />
+<!-- RViz -->
+<node pkg="rviz" name="rviz" type="rviz" output="screen" args="-d $(arg rvizconfig)"/>
+<!-- publish start and goal point 
+<node pkg="pracownia_badawcza" name="points" type="points" output="screen" />-->
+<!-- ompl-based motion planning node -->
+<node pkg="pracownia_badawcza" name="map_node" type="map_node" output="screen" />
+</launch>
+
+
+  
+

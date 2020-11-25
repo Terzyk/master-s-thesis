@@ -1,0 +1,5 @@
+<launch>
+<node name="map" pkg="map_server" type="map_server" args="$(find pracownia_badawcza)/maps/map3.yaml" />
+<!-- ompl-based motion planning node 
+<node pkg="pracownia_badawcza" name="map_node" type="map_node" output="screen" />-->
+</launch>
