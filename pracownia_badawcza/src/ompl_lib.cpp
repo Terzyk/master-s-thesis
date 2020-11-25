@@ -97,7 +97,6 @@ bool isStateValid(const ob::State *state)
     // get yaw coord of the robot
     const ob::RealVectorStateSpace::StateType *coordYaw =
             state->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(2);
-
     int x_pos = (coordX->values[0]-occupancyMap.info.origin.position.x)/occupancyMap.info.resolution;
     int y_pos = (coordY->values[0]-occupancyMap.info.origin.position.y)/occupancyMap.info.resolution;
     int yaw = coordYaw->values[0];
@@ -109,11 +108,12 @@ bool isStateValid(const ob::State *state)
     double right_down_y_angled = y_pos - (robot_height/2.0)*cos(yaw);
 
 
+
     int mapIndex = 0;
     int occupancyMapValue = 0;
     // sprawdzanie boku krotszego prostokata
     for (int i=0; i <= bottom.size(); i++) {
-        mapIndex = (int)((left_top_y_angled+bottom[i]))*occupancyMap.info.width+left_top_x_angled;
+        mapIndex = (int)((left_top_y_angled+bottom[i]))*occupancyMap.info.width+(int)(left_top_x_angled);
         occupancyMapValue = occupancyMap.data[mapIndex];
         if (occupancyMapValue == 100)
         {
@@ -121,7 +121,7 @@ bool isStateValid(const ob::State *state)
             break;
         }
         else temp=false;
-        mapIndex = (int)((right_down_y_angled-bottom[i]))*occupancyMap.info.width+right_down_x_angled;
+        mapIndex = (int)((right_down_y_angled-bottom[i]))*occupancyMap.info.width+int(right_down_x_angled);
         occupancyMapValue = occupancyMap.data[mapIndex];
         if (occupancyMapValue == 100)
         {
@@ -130,19 +130,18 @@ bool isStateValid(const ob::State *state)
         }
         else temp=false;
     }
-
     if(temp==true) return false;
     else return true;
     // sprawdzanie boku dluzszego prostokata
     for (int i=0; i <= top.size(); i++) {
-        mapIndex = (left_top_y_angled)*occupancyMap.info.width+(int)(left_top_x_angled-top[i]);
+        mapIndex = (int)(left_top_y_angled)*occupancyMap.info.width+(int)(left_top_x_angled-top[i]);
         occupancyMapValue = occupancyMap.data[mapIndex];
         if (occupancyMapValue == 100){
             temp=true;
             break;
             }
             else temp=false;
-        mapIndex = (right_down_y_angled)*occupancyMap.info.width+(int)(right_down_x_angled+top[i]);
+        mapIndex = (int)(right_down_y_angled)*occupancyMap.info.width+(int)(right_down_x_angled+top[i]);
         occupancyMapValue = occupancyMap.data[mapIndex];
         if (occupancyMapValue == 100){
             temp=true;
@@ -237,7 +236,6 @@ nav_msgs::Path Planner2D::planPath(const nav_msgs::OccupancyGrid& globalMap,cons
 {
     
     occupancyMap = globalMap;
-
     goal_x = gl_pt.pose.position.x;
     goal_y = gl_pt.pose.position.y;
     tf::Quaternion q_goal(gl_pt.pose.orientation.x,gl_pt.pose.orientation.y,gl_pt.pose.orientation.z,gl_pt.pose.orientation.w);
