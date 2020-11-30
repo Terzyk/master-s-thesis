@@ -3,6 +3,7 @@
 #include <tf/tf.h>
 #include <math.h>
 #include <cmath>
+#include "ompl/base/MotionValidator.h"
 # define M_PI           3.14159265358979323846  /* pi */
 
 using namespace std;
@@ -12,15 +13,7 @@ namespace ob = ompl::base;
 namespace og = ompl::geometric;
 
 
-
-
-
-
-
-
-
 namespace map_node {
-
 // global goal point
 double goal_x;
 double goal_y;
@@ -84,7 +77,20 @@ Planner2D::~Planner2D()
 {
 }
 
+// motion validator -> checking motion
+bool myMotionValidator::checkMotion(const ob::State *s1, const ob::State *s2) const
+{
+    return true;
+}
 
+// not used so far
+bool myMotionValidator::checkMotion(const ob::State *s1, const ob::State *s2, std::pair<ob::State *, double> &lastValid) const
+{
+    std::cout<<"TRUE"<<std::endl;
+    return false;
+}
+
+// check if current state us valid -> checking only edges of the car
 bool isStateValid(const ob::State *state)
 {
     if ((occupancyMap.info.width>0)&&(occupancyMap.info.height>0)){
@@ -106,8 +112,6 @@ bool isStateValid(const ob::State *state)
     double left_top_y_angled = y_pos + (robot_height/2.0)*cos(yaw);
     double right_down_x_angled = x_pos - (robot_width/2.0)*cos(yaw);
     double right_down_y_angled = y_pos - (robot_height/2.0)*cos(yaw);
-
-
 
     int mapIndex = 0;
     int occupancyMapValue = 0;
@@ -151,35 +155,12 @@ bool isStateValid(const ob::State *state)
     }
     if(temp==true) return false;
     else return true;
-   
- /*
-    for(int x=(-1)*robot_width; x<robot_width; x++)
-    {
-        for(int y=(-1)*robot_height; y<robot_height; y++)
-        {
-            int indeks = (y_pos+y)*occupancyMap.info.width+x_pos+x;
-            int value = occupancyMap.data[indeks];
-            ROS_INFO("occupancyMap.info.width: %d",occupancyMap.info.width);
-            ROS_INFO("y: %d",(y_pos+y));
-            ROS_INFO("x: %d",x_pos+x);
-            ROS_INFO("mapIndex1: %d",indeks);
-            ROS_INFO("occupancyMapValue1: %d",value);
-            if (value == 100){
-            temp=true;
-            break;
-            }
-            else temp=false;
-        }
     }
-    if(temp==true) return false;
-    else return true;
-    */
-    }
-}
+} // end isStateValid
 
 // extract path
 nav_msgs::Path Planner2D::extractPath(ob::ProblemDefinition* pdef){
-    ROS_INFO("#######################################################################");
+
     nav_msgs::Path plannedPath;
     plannedPath.header.frame_id = "/map";
     // get the obtained path
@@ -229,57 +210,39 @@ nav_msgs::Path Planner2D::extractPath(ob::ProblemDefinition* pdef){
     return plannedPath;
 }
 
-
- 
 // plan path
 nav_msgs::Path Planner2D::planPath(const nav_msgs::OccupancyGrid& globalMap,const visualization_msgs::Marker &st_pt,const visualization_msgs::Marker &gl_pt)
 {
-    
     occupancyMap = globalMap;
     goal_x = gl_pt.pose.position.x;
     goal_y = gl_pt.pose.position.y;
-    tf::Quaternion q_goal(gl_pt.pose.orientation.x,gl_pt.pose.orientation.y,gl_pt.pose.orientation.z,gl_pt.pose.orientation.w);
-    tf::Matrix3x3(q_goal).getRPY(roll_goal, pitch_goal, yaw_goal);
-    /*
-    ROS_INFO("x_goal: %f",gl_pt.pose.orientation.x);
-    ROS_INFO("y_goal: %f",gl_pt.pose.orientation.y);
-    ROS_INFO("z_goal: %f",gl_pt.pose.orientation.z);
-    ROS_INFO("w_goal: %f",gl_pt.pose.orientation.w);
-    */
     start_x = st_pt.pose.position.x;
     start_y = st_pt.pose.position.y;
+    // goal quaternion
+    tf::Quaternion q_goal(gl_pt.pose.orientation.x,gl_pt.pose.orientation.y,gl_pt.pose.orientation.z,gl_pt.pose.orientation.w);
+    tf::Matrix3x3(q_goal).getRPY(roll_goal, pitch_goal, yaw_goal);
+    // start quaternion
     tf::Quaternion q_start(st_pt.pose.orientation.x,st_pt.pose.orientation.y,st_pt.pose.orientation.z,st_pt.pose.orientation.w);
     tf::Matrix3x3(q_start).getRPY(roll_start, pitch_start, yaw_start);
-    /*
-    ROS_INFO("x_start: %f",st_pt.pose.orientation.x);
-    ROS_INFO("y_start: %f",st_pt.pose.orientation.y);
-    ROS_INFO("z_start: %f",st_pt.pose.orientation.z);
-    ROS_INFO("w_start: %f",st_pt.pose.orientation.w);
-
-    ROS_INFO("roll_start: %f",roll_start);
-    ROS_INFO("pitch_start: %f",pitch_start);
-    ROS_INFO("yaw_start: %f",yaw_start);
-    ROS_INFO("roll_goal: %f",roll_goal);
-    ROS_INFO("pitch_goal: %f",pitch_goal);
-    ROS_INFO("yaw_goal: %f",yaw_goal);
-    */
     // Create an instance of ompl::base::SpaceInformation for the state space 
     ob::SpaceInformationPtr si(new ob::SpaceInformation(space));
-    /*
-    ROS_INFO("space_dim: %d",space->getDimension());
-    ROS_INFO("space_dim: %d",si->getStateDimension());
-    */
     // Set the state validity checker 
     si->setStateValidityChecker(isStateValid);
+    // Set the motion validator
+    ob::MotionValidatorPtr mv(new myMotionValidator(si));
+    si->setMotionValidator(mv);
+    si->setup();
     // set State Validity Checking Resolution (avoid going through the walls)
     si->setStateValidityCheckingResolution(0.02);
     // create start and goal states
     std::vector<double> start_vector = {start_x,start_y,yaw_start};
     std::vector<double> goal_vector = {goal_x,goal_y,yaw_goal};
     ob::ScopedState<>start(space);
-    start=start_vector;
     ob::ScopedState<>goal(space);
+
+    start=start_vector;
     goal=goal_vector;
+
     start.print(std::cout);
     goal.print(std::cout);
     // Create an instance of ompl::base::ProblemDefinition
@@ -305,9 +268,6 @@ nav_msgs::Path Planner2D::planPath(const nav_msgs::OccupancyGrid& globalMap,cons
     }
     return plannedPath;
 }
-
-
-
 
 } 
 
