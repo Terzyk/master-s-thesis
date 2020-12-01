@@ -44,6 +44,7 @@ ompl::base::StateSpacePtr space(new ompl::base::SE2StateSpace());
 
 std::vector< double > top;
 std::vector< double > bottom;
+std::vector< double > dist;
 
 // constructor in which we create our space
 Planner2D::Planner2D(ros::NodeHandle& _nodeHandle)
@@ -77,15 +78,12 @@ Planner2D::~Planner2D()
 {
 }
 
-// motion validator -> checking motion
-bool myMotionValidator::checkMotion(const ob::State *s1, const ob::State *s2) const
-{
-    return true;
-}
+
 
 // not used so far
 bool myMotionValidator::checkMotion(const ob::State *s1, const ob::State *s2, std::pair<ob::State *, double> &lastValid) const
 {
+    std::cout<<"#################################################################";
     std::cout<<"TRUE"<<std::endl;
     return false;
 }
@@ -157,6 +155,113 @@ bool isStateValid(const ob::State *state)
     else return true;
     }
 } // end isStateValid
+
+// motion validator -> checking motion
+bool myMotionValidator::checkMotion(const ob::State *s1, const ob::State *s2) const
+{
+    // get coord of the first state
+    const ob::RealVectorStateSpace::StateType *state1_coordX = s1->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(0);
+    const ob::RealVectorStateSpace::StateType *state1_coordY = s1->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(1);
+    const ob::RealVectorStateSpace::StateType *state1_coordYaw = s1->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(2);
+    // get coord of the second state
+    const ob::RealVectorStateSpace::StateType *state2_coordX = s2->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(0);
+    const ob::RealVectorStateSpace::StateType *state2_coordY = s2->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(1);
+    const ob::RealVectorStateSpace::StateType *state2_coordYaw = s2->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(2);
+    //ROS_INFO("###############################################################");
+    //ob::State *check_state = space->allocState();
+    //ob::ScopedState<ob::SE2StateSpace> scoped_check_state(space);
+    int mapIndex = 0;
+    int occupancyMapValue = 0;
+    bool is_available = true;
+    int part_line = 0; // how many parts of the line we want to check
+    double part_distance = 0.2;
+    double alfa = 0.0;
+    int x_part = 0;
+    int y_part = 0;
+    //length between states
+    double distance = std::sqrt(((state1_coordX->values[0] - state2_coordX->values[0])*(state1_coordX->values[0] - state2_coordX->values[0])) + ((state1_coordY->values[0] - state2_coordY->values[0])*(state1_coordY->values[0] - state2_coordY->values[0])));
+    part_line = (int)(ceil(distance/part_distance)); // not sure if (int) rounds up
+    ROS_INFO("part_line: %d",part_line);
+    ROS_INFO("distance: %f",distance);
+    for (int i=1; i<=part_line; i=i+1)
+    {
+        if ((state1_coordX->values[0] >= state2_coordX->values[0]) && (state1_coordY->values[0] >= state2_coordY->values[0]))
+        {
+            ROS_INFO("1");
+            alfa = atan2((state1_coordY->values[0]-state2_coordY->values[0]),(state1_coordX->values[0]-state2_coordX->values[0]));
+            x_part = (int)(cos(alfa)*i*part_distance);
+            y_part = (int)(sin(alfa)*i*part_distance);
+            mapIndex = y_part*occupancyMap.info.width +x_part;
+            occupancyMapValue = occupancyMap.data[mapIndex];
+            ROS_INFO("mapIndex1: %d",mapIndex);
+            ROS_INFO("occupancyMapValue1: %d",occupancyMapValue);
+            if (occupancyMapValue == 100)
+            {
+                is_available=false;
+                break;
+            }
+            else is_available=true;
+        }
+        if ((state1_coordX->values[0] >= state2_coordX->values[0]) && (state1_coordY->values[0] < state2_coordY->values[0]))
+        {
+            ROS_INFO("2");
+            alfa = atan2((state2_coordY->values[0]-state1_coordY->values[0]),(state1_coordX->values[0]-state2_coordX->values[0]));
+            x_part = (int)(cos(alfa)*i*part_distance);
+            y_part = (int)(sin(alfa)*i*part_distance);
+            mapIndex = y_part*occupancyMap.info.width +x_part;
+            occupancyMapValue = occupancyMap.data[mapIndex];
+            ROS_INFO("mapIndex2: %d",mapIndex);
+            ROS_INFO("occupancyMapValue2: %d",occupancyMapValue);
+            if (occupancyMapValue == 100)
+            {
+                is_available=false;
+                break;
+            }
+            else is_available=true;
+        }
+        if ((state1_coordX->values[0] < state2_coordX->values[0]) && (state1_coordY->values[0] >= state2_coordY->values[0]))
+        {
+            ROS_INFO("3");
+            alfa = atan2((state1_coordY->values[0]-state2_coordY->values[0]),(state2_coordX->values[0]-state1_coordX->values[0]));
+            x_part = (int)(cos(alfa)*i*part_distance);
+            y_part = (int)(sin(alfa)*i*part_distance);
+            mapIndex = y_part*occupancyMap.info.width +x_part;
+            occupancyMapValue = occupancyMap.data[mapIndex];
+            ROS_INFO("mapIndex3: %d",mapIndex);
+            ROS_INFO("occupancyMapValue3: %d",occupancyMapValue);
+            if (occupancyMapValue == 100)
+            {
+                is_available=false;
+                break;
+            }
+            else is_available=true;
+        }
+        if ((state1_coordX->values[0] < state2_coordX->values[0]) && (state1_coordY->values[0] < state2_coordY->values[0]))
+        {
+            ROS_INFO("4");
+            //ROS_INFO("state2_coordY->values[0]: %f",state2_coordY->values[0]);
+            //ROS_INFO("state1_coordY->values[0]: %f",state1_coordY->values[0]);
+            //ROS_INFO("state2_coordX->values[0]: %f",state2_coordX->values[0]);
+            //ROS_INFO("state1_coordX->values[0]: %f",state1_coordX->values[0]);
+            alfa = atan2((state2_coordY->values[0]-state1_coordY->values[0]),(state2_coordX->values[0]-state1_coordX->values[0]));
+            ROS_INFO("angle: %f",alfa);
+            x_part = (int)(cos(alfa)*i*part_distance);
+            y_part = (int)(sin(alfa)*i*part_distance);
+            mapIndex = y_part*occupancyMap.info.width +x_part;
+            occupancyMapValue = occupancyMap.data[mapIndex];
+            ROS_INFO("mapIndex4: %d",mapIndex);
+            ROS_INFO("occupancyMapValue4: %d",occupancyMapValue);
+            if (occupancyMapValue == 100)
+            {
+                is_available=false;
+                break;
+            }
+            else is_available=true;
+        }
+    }
+    if (is_available) return true;
+    else return false;
+}
 
 // extract path
 nav_msgs::Path Planner2D::extractPath(ob::ProblemDefinition* pdef){
@@ -232,6 +337,7 @@ nav_msgs::Path Planner2D::planPath(const nav_msgs::OccupancyGrid& globalMap,cons
     ob::MotionValidatorPtr mv(new myMotionValidator(si));
     si->setMotionValidator(mv);
     si->setup();
+    std::cout<<"############################";
     // set State Validity Checking Resolution (avoid going through the walls)
     si->setStateValidityCheckingResolution(0.02);
     // create start and goal states
@@ -263,7 +369,7 @@ nav_msgs::Path Planner2D::planPath(const nav_msgs::OccupancyGrid& globalMap,cons
     nav_msgs::Path plannedPath;
     if (solved) 
     {
-        //std::cout<<"SOLVEEEEEEEED";
+        std::cout<<"SOLVEEEEEEEED";
         plannedPath=extractPath(pdef.get());
     }
     return plannedPath;
