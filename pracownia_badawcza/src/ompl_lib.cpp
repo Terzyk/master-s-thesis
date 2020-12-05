@@ -174,7 +174,7 @@ bool myMotionValidator::checkMotion(const ob::State *s1, const ob::State *s2) co
     int occupancyMapValue = 0;
     bool is_available = true;
     int part_line = 0; // how many parts of the line we want to check
-    double part_distance = 0.2;
+    double part_distance = 2.0;
     double alfa = 0.0;
     int x_part = 0;
     int y_part = 0;
@@ -189,9 +189,9 @@ bool myMotionValidator::checkMotion(const ob::State *s1, const ob::State *s2) co
         {
             ROS_INFO("1");
             alfa = atan2((state1_coordY->values[0]-state2_coordY->values[0]),(state1_coordX->values[0]-state2_coordX->values[0]));
-            x_part = (int)(cos(alfa)*i*part_distance);
-            y_part = (int)(sin(alfa)*i*part_distance);
-            mapIndex = y_part*occupancyMap.info.width +x_part;
+            x_part = cos(alfa)*i*part_distance;
+            y_part = sin(alfa)*i*part_distance;
+            mapIndex = (int)(state2_coordY->values[0]+y_part)*occupancyMap.info.width +(int)(x_part+state2_coordX->values[0]);
             occupancyMapValue = occupancyMap.data[mapIndex];
             ROS_INFO("mapIndex1: %d",mapIndex);
             ROS_INFO("occupancyMapValue1: %d",occupancyMapValue);
@@ -208,7 +208,7 @@ bool myMotionValidator::checkMotion(const ob::State *s1, const ob::State *s2) co
             alfa = atan2((state2_coordY->values[0]-state1_coordY->values[0]),(state1_coordX->values[0]-state2_coordX->values[0]));
             x_part = (int)(cos(alfa)*i*part_distance);
             y_part = (int)(sin(alfa)*i*part_distance);
-            mapIndex = y_part*occupancyMap.info.width +x_part;
+            mapIndex = (int)(state1_coordY->values[0]+y_part)*occupancyMap.info.width +(int)(state1_coordX->values[0]-x_part);
             occupancyMapValue = occupancyMap.data[mapIndex];
             ROS_INFO("mapIndex2: %d",mapIndex);
             ROS_INFO("occupancyMapValue2: %d",occupancyMapValue);
@@ -225,7 +225,7 @@ bool myMotionValidator::checkMotion(const ob::State *s1, const ob::State *s2) co
             alfa = atan2((state1_coordY->values[0]-state2_coordY->values[0]),(state2_coordX->values[0]-state1_coordX->values[0]));
             x_part = (int)(cos(alfa)*i*part_distance);
             y_part = (int)(sin(alfa)*i*part_distance);
-            mapIndex = y_part*occupancyMap.info.width +x_part;
+            mapIndex = (int)(state2_coordY->values[0]+y_part)*occupancyMap.info.width +(int)(state2_coordX->values[0]-x_part);
             occupancyMapValue = occupancyMap.data[mapIndex];
             ROS_INFO("mapIndex3: %d",mapIndex);
             ROS_INFO("occupancyMapValue3: %d",occupancyMapValue);
@@ -247,7 +247,7 @@ bool myMotionValidator::checkMotion(const ob::State *s1, const ob::State *s2) co
             ROS_INFO("angle: %f",alfa);
             x_part = (int)(cos(alfa)*i*part_distance);
             y_part = (int)(sin(alfa)*i*part_distance);
-            mapIndex = y_part*occupancyMap.info.width +x_part;
+            mapIndex = (int)(state1_coordY->values[0]+y_part)*occupancyMap.info.width +(int)(x_part+state1_coordX->values[0]);
             occupancyMapValue = occupancyMap.data[mapIndex];
             ROS_INFO("mapIndex4: %d",mapIndex);
             ROS_INFO("occupancyMapValue4: %d",occupancyMapValue);
@@ -333,13 +333,14 @@ nav_msgs::Path Planner2D::planPath(const nav_msgs::OccupancyGrid& globalMap,cons
     ob::SpaceInformationPtr si(new ob::SpaceInformation(space));
     // Set the state validity checker 
     si->setStateValidityChecker(isStateValid);
+    // set State Validity Checking Resolution (avoid going through the walls)
+    si->setStateValidityCheckingResolution(0.02);
     // Set the motion validator
     ob::MotionValidatorPtr mv(new myMotionValidator(si));
     si->setMotionValidator(mv);
     si->setup();
     std::cout<<"############################";
-    // set State Validity Checking Resolution (avoid going through the walls)
-    si->setStateValidityCheckingResolution(0.02);
+
     // create start and goal states
     std::vector<double> start_vector = {start_x,start_y,yaw_start};
     std::vector<double> goal_vector = {goal_x,goal_y,yaw_goal};
