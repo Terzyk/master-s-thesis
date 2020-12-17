@@ -68,5 +68,6 @@
         "condition_variable": "cpp",
         "mutex": "cpp",
         "valarray": "cpp"
-    }
+    },
+    "ros.distro": "melodic"
 }

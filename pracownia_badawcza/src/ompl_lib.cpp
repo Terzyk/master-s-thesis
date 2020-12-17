@@ -46,6 +46,9 @@ std::vector< double > top;
 std::vector< double > bottom;
 std::vector< double > dist;
 
+double a,b,c,d,e,f; //  wspolczynniki wielomianu
+double g0,g1,v,j,jv,k_val,m,k,p;
+
 // constructor in which we create our space
 Planner2D::Planner2D(ros::NodeHandle& _nodeHandle)
     : nodeHandle(_nodeHandle)
@@ -157,6 +160,7 @@ bool isStateValid(const ob::State *state)
 } // end isStateValid
 
 // motion validator -> checking motion
+/*
 bool myMotionValidator::checkMotion(const ob::State *s1, const ob::State *s2) const
 {
     // get coord of the first state
@@ -262,6 +266,127 @@ bool myMotionValidator::checkMotion(const ob::State *s1, const ob::State *s2) co
     if (is_available) return true;
     else return false;
 }
+*/
+
+
+bool myMotionValidator::checkMotion(const ob::State *s0, const ob::State *s1) const
+{
+    a=0.0;
+    b=0.0;
+    c=0.0;
+    d=0.0;
+    e=0.0;
+    f=0.0;
+    double beta_defined = sqrt(3.0);
+    double beta = 0.0;
+    double x_wielomian_global = 0.0;
+    double y_wielomian_global = 0.0;
+    double th_wielomian_global = 0.0;
+    double x_wielomian = 0.0;
+    double y_wielomian = 0.0;
+    double th_wielomian = 0.0;
+    double x1_in_s0 = 0.0;
+    double y1_in_s0 = 0.0;
+    double th1_in_s0 = 0.0;
+    double x0_in_s0 = 0.0;
+    double y0_in_s0 = 0.0;
+    double tan_th_wielomian = 0.0;
+    int mapIndex = 0;
+    int occupancyMapValue = 0;
+    bool is_available = true;
+    // get coord of the first state
+    const ob::RealVectorStateSpace::StateType *state1_coordX = s1->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(0);
+    const ob::RealVectorStateSpace::StateType *state1_coordY = s1->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(1);
+    const ob::RealVectorStateSpace::StateType *state1_coordYaw = s1->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(2);
+    // get coord of the second state
+    const ob::RealVectorStateSpace::StateType *state0_coordX = s0->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(0);
+    const ob::RealVectorStateSpace::StateType *state0_coordY = s0->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(1);
+    const ob::RealVectorStateSpace::StateType *state0_coordYaw = s0->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(2);
+    std::cout<<"#################################################################";
+
+    // wyrazenie punktu 1 w ukladzie punktu 0
+    th1_in_s0 = state0_coordYaw->values[0] - state1_coordYaw->values[0];
+    x1_in_s0 = state1_coordX->values[0]*cos(th1_in_s0) - state1_coordY->values[0]*sin(th1_in_s0);
+    y1_in_s0 = state1_coordX->values[0]*sin(th1_in_s0) - state1_coordY->values[0]*cos(th1_in_s0);
+    ROS_INFO("th1_in_s0: %f",th1_in_s0);
+    ROS_INFO("x1_in_s0: %f",x1_in_s0);
+    ROS_INFO("y1_in_s0: %f",y1_in_s0);
+    // consts
+    k_val = 1.0;
+    g0=k_val*(pow((1+tan(state0_coordYaw->values[0])*tan(state0_coordYaw->values[0])),(3/2)));
+    g1=k_val*(pow((1+tan(state1_coordYaw->values[0])*tan(state1_coordYaw->values[0])),(3/2)));
+    m = (g0/2)*pow(x1_in_s0,2) + tan(state0_coordYaw->values[0])*x1_in_s0 - y1_in_s0;
+    k = g0*x1_in_s0 + tan(state0_coordYaw->values[0]) - tan(state1_coordYaw->values[0]);
+    p = g0 - g1;
+    v = 6*m+pow(x1_in_s0,2)*p;
+    j = 2*k + x1_in_s0*p;
+    jv = j*(((-1)*18)/20)*x1_in_s0 + v;
+
+    // rownania
+    f = y0_in_s0;
+    e = tan(state0_coordYaw->values[0]);
+    d = g0/2;
+    a = (jv)/(pow(x1_in_s0,5));
+    b = (((-1.5)*x1_in_s0)*(1/pow(x1_in_s0,4)))*jv + (j/((-1)*20*pow(x1_in_s0,3)));
+    c = (-1)*((p+a*20.0*pow(x1_in_s0,3)+b*12.0*pow(x1_in_s0,2))/(6*x1_in_s0));
+    
+    ROS_INFO("a: %f",a);
+    ROS_INFO("b: %f",b);
+    ROS_INFO("c: %f",c);
+    ROS_INFO("d: %f",d);
+    ROS_INFO("e: %f",e);
+    ROS_INFO("f: %f",f);
+    
+    // wartosc funkcji wielomianowej licze dla wspolrzednych ukladu lokalnego  i zamieniam spowrotem na uklad globalny
+    for (double i = x0_in_s0; i < abs(x1_in_s0); i=i+0.1)
+    {
+        ROS_INFO("i: %f",i);
+        if (x1_in_s0 > x0_in_s0)
+        {
+            x_wielomian = x0_in_s0+i;
+            y_wielomian = a*pow(x_wielomian,5)+b*pow(x_wielomian,4)+c*pow(x_wielomian,3)+d*pow(x_wielomian,2)+e*x_wielomian + f;
+        }
+        else
+        {
+            x_wielomian = x1_in_s0+i;
+            y_wielomian = a*pow(x_wielomian,5)+b*pow(x_wielomian,4)+c*pow(x_wielomian,3)+d*pow(x_wielomian,2)+e*x_wielomian + f;
+        }
+        ROS_INFO("elo");
+        // zamiana na wartosci globalne
+        ROS_INFO("x_wielomian: %f",x_wielomian);
+        ROS_INFO("y_wielomian: %f",y_wielomian);
+        ROS_INFO("th1_in_s0: %f",th1_in_s0);
+        x_wielomian_global = x_wielomian*cos((-1)*th1_in_s0) - y_wielomian*sin((-1)*th1_in_s0);
+        y_wielomian_global = x_wielomian*sin((-1)*th1_in_s0) + y_wielomian*cos((-1)*th1_in_s0);
+        tan_th_wielomian = 5*a*pow(x_wielomian,4)+4*b*pow(x_wielomian,3)+3*c*pow(x_wielomian,2),2*d*x_wielomian+e;
+        th_wielomian = atan2(1.0,tan_th_wielomian);
+        th_wielomian_global = state0_coordYaw->values[0] + th_wielomian;
+        ROS_INFO("elo2");
+        // spr warunkow
+        ROS_INFO("y_wielomian_global: %f",y_wielomian_global);
+        ROS_INFO("x_wielomian_global: %f",x_wielomian_global);
+        mapIndex = (int)(y_wielomian_global)*occupancyMap.info.width +(int)(x_wielomian_global);
+        occupancyMapValue = occupancyMap.data[mapIndex];
+        ROS_INFO("mapIndex: %d",mapIndex);
+        ROS_INFO("occupancyMapValue: %d",occupancyMapValue);
+        if (occupancyMapValue == 100)
+            {
+                is_available=false;
+                break;
+            }
+            else is_available=true;
+        
+        
+        beta = atan2(pow(1+tan(th_wielomian)*tan(th_wielomian),(3/2)),20.0*a*pow(x_wielomian,3)+12.0*b*pow(x_wielomian,2)+6.0*c*x_wielomian+2.0*d);
+        if (beta<=beta_defined) return true;
+        else return false;
+    }
+    if (is_available) return true;
+    else return false;
+     
+}
+
+
 
 // extract path
 nav_msgs::Path Planner2D::extractPath(ob::ProblemDefinition* pdef){
