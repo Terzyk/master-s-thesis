@@ -49,7 +49,8 @@ int main(int argc, char **argv)
   // map1
   // Point end_point(210.5,351.5,"end_point",1.0,0.0,0.0);
   // map4
-  Point end_point(210.5,301.5,"end_point",1.0,0.0,0.0,q_goal_x,q_goal_y,q_goal_z,q_goal_w);
+  //Point end_point(210.5,301.5,"end_point",1.0,0.0,0.0,q_goal_x,q_goal_y,q_goal_z,q_goal_w);
+  Point end_point(50,50,"end_point",1.0,0.0,0.0,q_goal_x,q_goal_y,q_goal_z,q_goal_w);
   //Point robot(start_point.marker.pose.position.x,start_point.marker.pose.position.y,"robot_coordinates",0.0,0.0,1.0);
   ros::Rate loop_rate(10);
 
