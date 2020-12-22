@@ -22,7 +22,7 @@ visualization_msgs::Marker robot_coord;
 // time variables 
 ros::WallTime start_planning, end_planning;
 // variable for counting, how many times should the program plan path, if = 1 only one path will be made
-int iter_paths = 10;
+int iter_paths = 1;
 // variable for counting, how many times program planned path
 int made_paths = 0;
 // robot coord publisher

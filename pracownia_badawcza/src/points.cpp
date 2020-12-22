@@ -19,7 +19,7 @@ Point::Point(int x,int y,std::string name,float r,float g,float b,float roll,flo
     marker.pose.orientation.y = pitch;
     marker.pose.orientation.z = yaw;
     marker.pose.orientation.w = w;
-    marker.scale.x=14.0;
+    marker.scale.x=4.0;
     marker.scale.y=1.2;
     marker.scale.z=0.01;
     marker.color.r = r;
@@ -50,7 +50,7 @@ int main(int argc, char **argv)
   // Point end_point(210.5,351.5,"end_point",1.0,0.0,0.0);
   // map4
   //Point end_point(210.5,301.5,"end_point",1.0,0.0,0.0,q_goal_x,q_goal_y,q_goal_z,q_goal_w);
-  Point end_point(50,50,"end_point",1.0,0.0,0.0,q_goal_x,q_goal_y,q_goal_z,q_goal_w);
+  Point end_point(80,480,"end_point",1.0,0.0,0.0,q_goal_x,q_goal_y,q_goal_z,q_goal_w);
   //Point robot(start_point.marker.pose.position.x,start_point.marker.pose.position.y,"robot_coordinates",0.0,0.0,1.0);
   ros::Rate loop_rate(10);
 
