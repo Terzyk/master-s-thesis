@@ -3,6 +3,7 @@
 #include <tf/tf.h>
 #include <math.h>
 #include <cmath>
+#include <fstream>
 #include "ompl/base/MotionValidator.h"
 # define M_PI           3.14159265358979323846  /* pi */
 
@@ -14,6 +15,8 @@ namespace og = ompl::geometric;
 
 
 namespace map_node {
+// file for results
+std::ofstream myfile2;
 // global goal point
 double goal_x;
 double goal_y;
@@ -303,13 +306,22 @@ factors calculate_factors(double k_val,double th0,double x0,double y0,double th1
     aa = (-3.0*tan(th1))/(pow(x1,4));
     bb = (7.0*tan(th1))/(pow(x1,3));
     cc = (-4.0*tan(th1))/(pow(x1,2));
+
+    ff = y0;
+    ee = tan(th0);
+    dd = 0.0;
+    aa = ((6.0*y1+(-3.0)*x1*tan(th1))/pow(x1,5));
+    bb = (x1*tan(th1)+(-3.0)*y1+(-2.0)*aa*pow(x1,5))/(pow(x1,4));
+    //cc = -((-1.0*y1+aa*pow(x1,5)+bb*pow(x1,4))/(pow(x1,3)));
+    cc = (y1-aa*pow(x1,5)-bb*pow(x1,4))/(pow(x1,3));
 */
     ff = y0;
     ee = tan(th0);
     dd = 0.0;
-    aa = ((6.0*y1+(-3.0)*tan(th1))/pow(x1,5));
-    bb = (x1*tan(th1)+(-3.0)*y1+(-2.0)*aa*pow(x1,5))/(pow(x1,4));
-    cc = -((-1.0*y1+aa*pow(x1,5)+bb*pow(x1,4))/(pow(x1,3)));
+    bb = (7.0*x1*tan(th1)+(-15.0)*y1)/(pow(x1,4));
+    aa = ((6.0*y1+6.0*pow(x1,4)*bb)/((-14.0)*pow(x1,5)));
+    //cc = -((-1.0*y1+aa*pow(x1,5)+bb*pow(x1,4))/(pow(x1,3)));
+    cc = ((-20.0*aa*pow(x1,2)+(-12.0)*bb*x1)/6.0);
 
 
     ROS_INFO("aa: %f",aa);
@@ -419,6 +431,14 @@ bool myMotionValidator::checkMotion(const ob::State *s0, const ob::State *s1) co
         //th_wielomian = atan(tan_th_wielomian);
         th_wielomian_global = state0_coordYaw->values[0] + th_wielomian;
 
+        // nie wiem, czy to jest potrzebne, ale czasem w terminalu widzialem punkty ktorych wartosc wydaje sie wieksza niz wys i szer mapy
+        //if (x_wielomian_global <= occupancyMap.info.width && y_wielomian_global <= occupancyMap.info.height)
+            //is_available=true;
+        //else 
+        //{
+        //is_available=false;
+       //break;
+        //}
 
         // zamiana na wartosci globalne
         ROS_INFO("x_wielomian: %f",x_wielomian);
@@ -454,6 +474,12 @@ bool myMotionValidator::checkMotion(const ob::State *s0, const ob::State *s1) co
             is_available=false;
             break;
         }
+
+        // zapis danych do pliku
+        myfile2.open("dane_global6.txt",ofstream::app);
+        myfile2 << x_wielomian_global <<","<<y_wielomian_global<<","<<th_wielomian_global<<std::endl;
+        myfile2.close();
+
     }
     if (is_available) return true;
     else return false;
@@ -638,6 +664,8 @@ nav_msgs::Path Planner2D::extractPath(ob::ProblemDefinition* pdef){
 // plan path
 nav_msgs::Path Planner2D::planPath(const nav_msgs::OccupancyGrid& globalMap,const visualization_msgs::Marker &st_pt,const visualization_msgs::Marker &gl_pt)
 {
+
+    
     occupancyMap = globalMap;
     goal_x = gl_pt.pose.position.x;
     goal_y = gl_pt.pose.position.y;
@@ -683,6 +711,8 @@ nav_msgs::Path Planner2D::planPath(const nav_msgs::OccupancyGrid& globalMap,cons
     // Make sure all the settings for the space and planner are in order. 
     // This will also lead to the runtime computation of the state validity checking resolution. 
     planner->setup();
+    // close file with data
+    myfile2.close();
     ROS_INFO("################################## TUTAAAAAAAAAAAJ #############################");
     // solve motion planning problem
     ob::PlannerStatus solved = planner->ob::Planner::solve(1.0);
