@@ -4,18 +4,56 @@
 #include <math.h>
 #include <cmath>
 #include <fstream>
+#include <ostream>
+#include "../include/pracownia_badawcza/points.hpp"
 #include "ompl/base/MotionValidator.h"
 # define M_PI           3.14159265358979323846  /* pi */
 
 using namespace std;
 using namespace ros;
 
+
+
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
 
+// Point::Point(int x,int y,std::string name,float r,float g,float b,float roll,float pitch,float yaw,float w){
+//     marker_pub = n.advertise<visualization_msgs::Marker>(name, 1000);
+//     marker.header.frame_id = "map";
+//     marker.header.stamp = ros::Time::now();
+//     marker.ns = name;
+//     marker.id = 0;
+//     marker.type = visualization_msgs::Marker::CUBE;
+//     marker.action = visualization_msgs::Marker::ADD;
+//     marker.pose.position.x = x;
+//     marker.pose.position.y = y;
+//     marker.pose.position.z = 0;
+//     marker.pose.orientation.x = roll;
+//     marker.pose.orientation.y = pitch;
+//     marker.pose.orientation.z = yaw;
+//     marker.pose.orientation.w = w;
+//     marker.scale.x=4.0;
+//     marker.scale.y=1.2;
+//     marker.scale.z=0.01;
+//     marker.color.r = r;
+//     marker.color.g = g;
+//     marker.color.b = b;
+//     marker.color.a = 1.0;
+//     marker.lifetime = ros::Duration();
+// }
+// void Point::publish(){
+//     marker_pub.publish(marker);
+// }
+
+int ix = 0;
 
 namespace map_node {
+
+
+
 // file for results
+std::filebuf fb;
+std::ostream os(&fb);
 std::ofstream myfile2;
 // global goal point
 double goal_x;
@@ -99,6 +137,7 @@ bool myMotionValidator::checkMotion(const ob::State *s1, const ob::State *s2, st
 {
     std::cout<<"#################################################################";
     std::cout<<"TRUE"<<std::endl;
+    ROS_INFO("JESTEM TUUUUUUUUU");
     return false;
 }
 
@@ -280,25 +319,44 @@ bool myMotionValidator::checkMotion(const ob::State *s1, const ob::State *s2) co
 */
 factors calculate_factors(double k_val,double th0,double x0,double y0,double th1,double x1, double y1)
 {
-    //double g0,g1,v,j,jv,m,k,p;
+    double g1,w,z;
     double aa,bb,cc,dd,ee,ff;
     //kval dac zero
-    /*
-    g0=k_val*(pow((1+tan(th0)*tan(th0)),(3/2)));
-    g1=k_val*(pow((1+tan(th1)*tan(th1)),(3/2)));
-    m = (g0/2)*pow(x1,2) + tan(th0)*x1 - y1;
-    k = g0*x1 + tan(th0) - tan(th1);
-    p = g0 - g1;
-    v = 6.0*m+pow(x1,2)*p;
-    j = 2.0*k + x1*p;
-    jv = j*(-0.9)*x1+v;
 
-    ff = y0;
+    
+    ff = 0.0;
     ee = tan(th0);
-    dd = g0/2;
-    aa = (jv)/(pow(x1,5));
-    bb = ((-1.5)*(1/pow(x1,4))*jv + (j/((-1)*20*pow(x1,3))));
-    cc = (-1)*((p+a*20.0*pow(x1,3)+b*12.0*pow(x1,2))/(6*x1));
+    dd = 0.5*(k_val *  pow((1+pow(ee,2)),(1.5)));
+    
+    z = y1 - dd*pow(x1,2) - ee*x1 - ff;
+    w = tan(th1) - ee - 2*dd*x1;
+    g1 = k_val *  pow((1+pow(tan(th1),2)),(1.5)) - 2*dd;
+
+    aa = (12.0*z - 6.0*w*x1 + g1*x1*x1)/(2.0*pow(x1,5));
+    bb = (54.0*w*x1 - 120.0*z - 8.0*g1*x1*x1)/(8.0*pow(x1,4));
+    cc = (20.0*z + g1*x1*x1 - 8.0*w*x1)/(2.0*pow(x1,3));
+
+
+    // g0=k_val*(pow((1+tan(th0)*tan(th0)),(3/2)));
+    // g1=k_val*(pow((1+tan(th1)*tan(th1)),(3/2)));
+    // m = (g0/2)*pow(x1,2) + tan(th0)*x1 - y1;
+    // k = g0*x1 + tan(th0) - tan(th1);
+    // p = g0 - g1;
+    // v = 6.0*m+pow(x1,2)*p;
+    // j = 2.0*k + x1*p;
+    // jv = j*(-0.9)*x1+v;
+
+    // ff = y0;
+    // ee = tan(th0);
+    // dd = g0/2;
+    // aa = (jv)/(pow(x1,5));
+    // bb = ((-1.5)*(1/pow(x1,4))*jv + (j/((-1)*20*pow(x1,3))));
+    // cc = (-1)*((p+a*20.0*pow(x1,3)+b*12.0*pow(x1,2))/(6*x1));
+
+    /*
+
+
+
     
     ff = y0;
     ee = tan(th0);
@@ -315,21 +373,21 @@ factors calculate_factors(double k_val,double th0,double x0,double y0,double th1
     //cc = -((-1.0*y1+aa*pow(x1,5)+bb*pow(x1,4))/(pow(x1,3)));
     cc = (y1-aa*pow(x1,5)-bb*pow(x1,4))/(pow(x1,3));
 */
-    ff = y0;
-    ee = tan(th0);
-    dd = 0.0;
-    bb = (7.0*x1*tan(th1)+(-15.0)*y1)/(pow(x1,4));
-    aa = ((6.0*y1+6.0*pow(x1,4)*bb)/((-14.0)*pow(x1,5)));
-    //cc = -((-1.0*y1+aa*pow(x1,5)+bb*pow(x1,4))/(pow(x1,3)));
-    cc = ((-20.0*aa*pow(x1,2)+(-12.0)*bb*x1)/6.0);
+    // ff = y0;
+    // ee = tan(th0);
+    // dd = 0.0;
+    // bb = (7.0*x1*tan(th1)+(-15.0)*y1)/(pow(x1,4));
+    // aa = ((6.0*y1+6.0*pow(x1,4)*bb)/((-14.0)*pow(x1,5)));
+    // //cc = -((-1.0*y1+aa*pow(x1,5)+bb*pow(x1,4))/(pow(x1,3)));
+    // cc = ((-20.0*aa*pow(x1,2)+(-12.0)*bb*x1)/6.0);
 
 
-    ROS_INFO("aa: %f",aa);
-    ROS_INFO("bb: %f",bb);
-    ROS_INFO("cc: %f",cc);
-    ROS_INFO("dd: %f",dd);
-    ROS_INFO("ee: %f",ee);
-    ROS_INFO("ff: %f",ff);
+    // ROS_INFO("aa: %f",aa);
+    // ROS_INFO("bb: %f",bb);
+    // ROS_INFO("cc: %f",cc);
+    // ROS_INFO("dd: %f",dd);
+    // ROS_INFO("ee: %f",ee);
+    // ROS_INFO("ff: %f",ff);
 
     factors result = {aa,bb,cc,dd,ee,ff};
 
@@ -338,12 +396,8 @@ factors calculate_factors(double k_val,double th0,double x0,double y0,double th1
 
 bool myMotionValidator::checkMotion(const ob::State *s0, const ob::State *s1) const
 {
-    a=0.0;
-    b=0.0;
-    c=0.0;
-    d=0.0;
-    e=0.0;
-    f=0.0;
+
+    a,b,c,d,e,f = 0.0;
     double beta_defined = M_PI/3;
     double curve = 0.0;
     double x_wielomian_global = 0.0;
@@ -352,14 +406,9 @@ bool myMotionValidator::checkMotion(const ob::State *s0, const ob::State *s1) co
     double x_wielomian = 0.0;
     double y_wielomian = 0.0;
     double th_wielomian = 0.0;
-    double x1_in_s0 = 0.0;
-    double y1_in_s0 = 0.0;
-    double th1_in_s0 = 0.0;
-    double x0_in_s0 = 0.0;
-    double y0_in_s0 = 0.0;
-    double th0_in_s0 = 0.0;
     double tan_th_wielomian = 0.0;
     double max_curve = 0.0;
+
     int mapIndex = 0;
     int occupancyMapValue = 0;
     double signn = 1.0;
@@ -372,147 +421,225 @@ bool myMotionValidator::checkMotion(const ob::State *s0, const ob::State *s1) co
     const ob::RealVectorStateSpace::StateType *state0_coordX = s0->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(0);
     const ob::RealVectorStateSpace::StateType *state0_coordY = s0->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(1);
     const ob::RealVectorStateSpace::StateType *state0_coordYaw = s0->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(2);
-    ROS_INFO("#######################");
-    ROS_INFO("OTRZYMANE WSPOLRZEDNE 2 STANOW");
-    ROS_INFO("state0_coordX->values[0]: %f",state0_coordX->values[0]);
-    ROS_INFO("state0_coordY->values[0]: %f",state0_coordY->values[0]);
-    ROS_INFO("state0_coordYaw->values[0]: %f",state0_coordYaw->values[0]);
-    ROS_INFO("state1_coordX->values[0]: %f",state1_coordX->values[0]);
-    ROS_INFO("state1_coordY->values[0]: %f",state1_coordY->values[0]);
-    ROS_INFO("state1_coordYaw->values[0]: %f",state1_coordYaw->values[0]);
-    ROS_INFO("######################");
-    ROS_INFO("WSPOLRZEDNE PUNKTU PIERWSZEGO W UKLADZIE 0");
+    // ROS_INFO("#######################");
+    // ROS_INFO("Motion Validator dla stanow:");
+    // ROS_INFO("stan0 X: %f",state0_coordX->values[0]);
+    // ROS_INFO("stan0 Y: %f",state0_coordY->values[0]);
+    // ROS_INFO("stan0 Yaw %f",state0_coordYaw->values[0]);
+    // ROS_INFO("stan1 X: %f",state1_coordX->values[0]);
+    // ROS_INFO("stan1 Y: %f",state1_coordY->values[0]);
+    // ROS_INFO("stan1 Yaw: %f",state1_coordYaw->values[0]);
+    // ROS_INFO("######################");
+    // ROS_INFO("WSPOLRZEDNE PUNKTU PIERWSZEGO W UKLADZIE 0");
+
     // wyrazenie punktu 1 w ukladzie punktu 0
-    th1_in_s0 = state0_coordYaw->values[0] - state1_coordYaw->values[0]; // na pewno 0 - 1
-    x1_in_s0 = state1_coordX->values[0]*cos(th1_in_s0) - state1_coordY->values[0]*sin(th1_in_s0);
-    y1_in_s0 = state1_coordX->values[0]*sin(th1_in_s0) + state1_coordY->values[0]*cos(th1_in_s0);
+    // double th1_in_s0 = state0_coordYaw->values[0] - state1_coordYaw->values[0]; // na pewno 0 - 1
+    // double x1_in_s0 = state1_coordX->values[0]*cos(th1_in_s0) - state1_coordY->values[0]*sin(th1_in_s0);
+    // double y1_in_s0 = state1_coordX->values[0]*sin(th1_in_s0) + state1_coordY->values[0]*cos(th1_in_s0);
+    // // uklad 0
+    // double x0_in_s0 = 0.0;
+    // double y0_in_s0 = 0.0;
+    // double th0_in_s0 = 0.0;
 
-    // zalozenie ze orientacja punktu 1 w lokalnym ukladzie jest co do bezwglednej wartosci mniejsza niz pi/2
-    if (abs(th1_in_s0) > M_PI/2)
-        return false;
+    // //zalozenie ze orientacja punktu 1 w lokalnym ukladzie jest co do bezwglednej wartosci mniejsza niz pi/2
+    //  if (abs(th1_in_s0) >= M_PI/2)
+    //  {
+    //     //ROS_INFO("warunek nr 1");
+    //     return false;
+    //  }
+         
 
 
-    ROS_INFO("th1_in_s0: %f",th1_in_s0);
-    ROS_INFO("x1_in_s0: %f",x1_in_s0);
-    ROS_INFO("y1_in_s0: %f",y1_in_s0);
+    // // ROS_INFO("th1_in_s0: %f",th1_in_s0);
+    // // ROS_INFO("x1_in_s0: %f",x1_in_s0);
+    // // ROS_INFO("y1_in_s0: %f",y1_in_s0);
 
   
-    double k_vall = 0.0;
-    factors res;
-    res = calculate_factors(k_vall,th0_in_s0,x0_in_s0,y0_in_s0,th1_in_s0,x1_in_s0,y1_in_s0);
-    a = res.value1;
-    b = res.value2;
-    c = res.value3;
-    d = res.value4;
-    e = res.value5;
-    f = res.value6;
-    ROS_INFO("a: %f",a);
-    ROS_INFO("b: %f",b);
-    ROS_INFO("c: %f",c);
-    ROS_INFO("d: %f",d);
-    ROS_INFO("e: %f",e);
-    ROS_INFO("f: %f",f);
+    // double k_vall = 0.0;
+    // factors res;
+    // res = calculate_factors(k_vall,th0_in_s0,x0_in_s0,y0_in_s0,th1_in_s0,x1_in_s0,y1_in_s0);
+    // a = res.value1;
+    // b = res.value2;
+    // c = res.value3;
+    // d = res.value4;
+    // e = res.value5;
+    // f = res.value6;
 
-    if (x1_in_s0 < 0) signn = -1.0;
-    else signn= 1.0;
 
-    // wartosc funkcji wielomianowej licze dla wspolrzednych ukladu lokalnego  i zamieniam spowrotem na uklad globalny
-    for (double i = 0.0; i < abs(x1_in_s0); i=i+0.1)
-    {
-        // i to jest wartość w pętl która z każdą iteracją zwiększa się o 10cm
-        x_wielomian = (x0_in_s0+i)*signn;
-        y_wielomian = a*pow(x_wielomian,5)+b*pow(x_wielomian,4)+c*pow(x_wielomian,3)+d*pow(x_wielomian,2)+e*x_wielomian + f;
-        // zamiana na wartosci globalne
-        x_wielomian_global = state0_coordX->values[0] + x_wielomian*cos((-1.0)*th1_in_s0) - y_wielomian*sin((-1.0)*th1_in_s0);
-        y_wielomian_global = state0_coordY->values[0] + x_wielomian*sin((-1.0)*th1_in_s0) + y_wielomian*cos((-1.0)*th1_in_s0);
+    // // sprawdzenie znaku 
+    // if (x1_in_s0 < 0)
+    // {
+    //     signn= -1.0;
+    //     //return false;
+    // } 
+    // else signn= 1.0;
 
-        tan_th_wielomian = 5*a*pow(x_wielomian,4)+4*b*pow(x_wielomian,3)+3*c*pow(x_wielomian,2),2*d*x_wielomian+e;
-        th_wielomian = atan(tan_th_wielomian);
-        //th_wielomian = atan(tan_th_wielomian);
-        th_wielomian_global = state0_coordYaw->values[0] + th_wielomian;
+    // // wartosc funkcji wielomianowej licze dla wspolrzednych ukladu lokalnego  i zamieniam spowrotem na uklad globalny
+    // for (double i = 0.0; i < abs(x1_in_s0); i=i+0.1)
+    // {
+    //     // i to jest wartość w pętl która z każdą iteracją zwiększa się o 10cm
+    //     //x_wielomian = (x0_in_s0+i)*signn;
+    //     x_wielomian = x0_in_s0+i*signn;
+    //     y_wielomian = a*pow(x_wielomian,5)+b*pow(x_wielomian,4)+c*pow(x_wielomian,3)+d*pow(x_wielomian,2)+e*x_wielomian + f;
+    //     // zamiana na wartosci globalne
+    //     // x_wielomian_global = state0_coordX->values[0] + x_wielomian*cos((-1.0)*th1_in_s0) - y_wielomian*sin((-1.0)*th1_in_s0);
+    //     // y_wielomian_global = state0_coordY->values[0] + x_wielomian*sin((-1.0)*th1_in_s0) + y_wielomian*cos((-1.0)*th1_in_s0);
 
-        // nie wiem, czy to jest potrzebne, ale czasem w terminalu widzialem punkty ktorych wartosc wydaje sie wieksza niz wys i szer mapy
-        //if (x_wielomian_global <= occupancyMap.info.width && y_wielomian_global <= occupancyMap.info.height)
-            //is_available=true;
-        //else 
-        //{
-        //is_available=false;
-       //break;
-        //}
+    //     x_wielomian_global = state0_coordX->values[0] + x_wielomian*cos(th1_in_s0) + y_wielomian*sin(th1_in_s0);
+    //     y_wielomian_global = state0_coordY->values[0] + x_wielomian*(-1.0)*sin(th1_in_s0) + y_wielomian*cos(th1_in_s0);
 
-        // zamiana na wartosci globalne
-        ROS_INFO("x_wielomian: %f",x_wielomian);
-        ROS_INFO("y_wielomian: %f",y_wielomian);
-        ROS_INFO("th1_in_s0: %f",th1_in_s0);
+    //     tan_th_wielomian = 5*a*pow(x_wielomian,4)+4*b*pow(x_wielomian,3)+3*c*pow(x_wielomian,2),2*d*x_wielomian+e;
+    //     th_wielomian = atan(tan_th_wielomian);
+    //     //th_wielomian = atan(tan_th_wielomian);
+    //     th_wielomian_global = state0_coordYaw->values[0] + th_wielomian;
 
-        // spr warunkow
-        ROS_INFO("y_wielomian_global: %f",y_wielomian_global);
-        ROS_INFO("x_wielomian_global: %f",x_wielomian_global);
+    //     //ROS_INFO("y_wielomian_global: %f",y_wielomian_global);
+    //     //ROS_INFO("x_wielomian_global: %f",x_wielomian_global);
 
-        // sprawdzam warunki
-        // 1
-        mapIndex = (int)(y_wielomian_global)*occupancyMap.info.width +(int)(x_wielomian_global);
-        occupancyMapValue = occupancyMap.data[mapIndex];
-        ROS_INFO("mapIndex: %d",mapIndex);
-        ROS_INFO("occupancyMapValue: %d",occupancyMapValue);
-        if (occupancyMapValue == 100)
-            {
-                is_available=false;
-                break;
-            }
-            else is_available=true;
+
+    //     if ((x_wielomian_global >= occupancyMap.info.width || x_wielomian_global <= 0.0)||(y_wielomian_global >= occupancyMap.info.height || y_wielomian_global <= 0.0))
+    //     { 
+    //         is_available=false;
+    //         //ROS_INFO("warunek nr 2");
+    //         // ROS_INFO("y_wielomian_global: %f",y_wielomian_global);
+    //         // ROS_INFO("x_wielomian_global: %f",x_wielomian_global);
+    //         break;
+    //     }
+    //     else 
+    //     {
+    //         is_available=true;
+    //     }
+
+    //     // ROS_INFO("x_wielomian: %f",x_wielomian);
+    //     // ROS_INFO("y_wielomian: %f",y_wielomian);
+    //     // ROS_INFO("th1_in_s0: %f",th1_in_s0);
+
+    //     // ROS_INFO("x_wielomian_global: %f",x_wielomian_global);
+    //     // ROS_INFO("y_wielomian_global: %f",y_wielomian_global);
+
+    //     mapIndex = (int)(y_wielomian_global)*occupancyMap.info.width +(int)(x_wielomian_global);
+    //     occupancyMapValue = occupancyMap.data[mapIndex];
+    //     // ROS_INFO("mapIndex: %d",mapIndex);
+    //     //ROS_INFO("occupancyMapValue: %d",occupancyMapValue);
+    //     if ((occupancyMapValue > 0) || (occupancyMapValue < 0))
+    //     //if (occupancyMapValue == 100)
+    //         {
+    //             is_available=false;
+    //             //ROS_INFO("warunek nr 3");
+    //             break;
+    //         }
+    //     else 
+    //         {
+    //             is_available=true;
+    //         }
         
-        // maksymalna krzywizna:
-        max_curve = tan(beta_defined)/robot_height; // zmienic nazwy robot_height z robot_width
-        // L=1.2
-        curve = (20.0*a*pow(x_wielomian,3)+12.0*b*pow(x_wielomian,2)+6.0*c*x_wielomian+2.0*d)/(pow(1+tan_th_wielomian*tan_th_wielomian,(3/2)));
-        ROS_INFO("curve: %f",curve);
-        ROS_INFO("max_curve: %f",max_curve);
-        if (curve<=max_curve) is_available=true;
-        else 
-        {
-            is_available=false;
-            break;
-        }
+    //     // maksymalna krzywizna:
+    //     max_curve = tan(beta_defined)/robot_height; // zmienic nazwy robot_height z robot_width
+    //     // L=1.2
+    //     // dodalem abs
+    //     //curve = (20.0*a*pow(x_wielomian,3)+12.0*b*pow(x_wielomian,2)+6.0*c*x_wielomian+2.0*d)/(pow(1+tan_th_wielomian*tan_th_wielomian,(3/2)));
+    //     curve = abs(20.0*a*pow(x_wielomian,3)+12.0*b*pow(x_wielomian,2)+6.0*c*x_wielomian+2.0*d)/(pow(1+tan_th_wielomian*tan_th_wielomian,(3/2)));
+    //     // ROS_INFO("curve: %f",curve);
+    //     // ROS_INFO("max_curve: %f",max_curve);
+    //     if (curve<=max_curve) is_available=true;
+    //     else 
+    //     {
+    //         is_available=false;
+    //         //ROS_INFO("warunek nr 4");
+    //         break;
+    //     }
 
-        // zapis danych do pliku
-        myfile2.open("dane_global6.txt",ofstream::app);
-        myfile2 << x_wielomian_global <<","<<y_wielomian_global<<","<<th_wielomian_global<<std::endl;
-        myfile2.close();
+    //     // zapis danych do pliku
+    //     // myfile2.open("dane_global9.txt",ofstream::app);
+    //     // myfile2 << x_wielomian_global <<","<<y_wielomian_global<<","<<th_wielomian_global<<std::endl;
+    //     // myfile2.close();
 
-    }
-    if (is_available) return true;
-    else return false;
+    // }
+
+
+    // bool is_available = false;
+   
+    // if (ix==0) {
+    //      ROS_INFO("BBB %d",ix);
+    //     ix=ix+1;
+    //     is_available = false;
+    // }
+    // else {
+    // ROS_INFO("AIII");
+    // is_available = true;
+    // }
+    // ROS_INFO("is_available %d",is_available);
+
+
+    //is_available = true;
+    // ix = 1;
+    // if (ix==0) 
+    // {   
+    //     ROS_INFO("First loop");
+    //     ix = 1;
+    //     is_available = true;
+    //     return false;
+    // }
+    // else 
+    // {
+    // //ROS_INFO("Rest of the loop");
+    // if (is_available)
+    // {
+    //     ROS_INFO("Motion Validator: True");
+    //     return true;
+    // }
+    // else 
+    // {
+    //     ROS_INFO("Motion Validator: False");
+    //     return false;
+    // }
+    // }
+
+    
+    return true;
      
 }
 
+// void myPlannerData::getPlannerData(ob::PlannerData &data)
+// {
+//     ROS_INFO("plannerdata");
+// }
+
+
+
 // extract path
 nav_msgs::Path Planner2D::extractPath(ob::ProblemDefinition* pdef){
-
     double th1_in_s0,x1_in_s0,y1_in_s0;
     double th0_in_s0,x0_in_s0,y0_in_s0;
     double signn;
     double x_wielomian,y_wielomian,x_wielomian_global,y_wielomian_global,tan_th_wielomian,th_wielomian,th_wielomian_global;
+    double beta_defined = M_PI/3;
+    double curve = 0.0;
+    double max_curve = 0.0;
 
     nav_msgs::Path plannedPath;
-    plannedPath.header.frame_id = "/map";
+    plannedPath.header.frame_id = "map";
     // get the obtained path
     ob::PathPtr path = pdef->getSolutionPath();
     // print the path to screen
     path->print(std::cout);
+    
     // convert to geometric path
     og::PathGeometric *path2 = path.get()->as<og::PathGeometric>();
     //get path length
     path_length = path2->getStateCount();
     // iterate over each position
     ROS_INFO("path_len: %d",path_length);
+    ROS_INFO("width: %d",occupancyMap.info.width);
+    ROS_INFO("height: %d",occupancyMap.info.height);
+
+    // std::cin.get();
     for(int i=0; i<path_length-1; ++i)
     {
 
         // get states 
         ob::State *state0 = path2->getState(i);
         ob::State *state1 = path2->getState(i+1);
-
         ob::RealVectorStateSpace::StateType *state0_coordX = state0->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(0);
         ob::RealVectorStateSpace::StateType *state0_coordY = state0->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(1);
         ob::RealVectorStateSpace::StateType *state0_coordYaw = state0->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(2);
@@ -520,25 +647,50 @@ nav_msgs::Path Planner2D::extractPath(ob::ProblemDefinition* pdef){
         ob::RealVectorStateSpace::StateType *state1_coordY = state1->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(1);
         ob::RealVectorStateSpace::StateType *state1_coordYaw = state1->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(2);
 
-        ROS_INFO("OTRZYMANE WSPOLRZEDNE 2 STANOW");
-        ROS_INFO(" ");
-        ROS_INFO("state0_coordX->values[0]: %f",state0_coordX->values[0]);
-        ROS_INFO("state0_coordY->values[0]: %f",state0_coordY->values[0]);
-        ROS_INFO("state0_coordYaw->values[0]: %f",state0_coordYaw->values[0]);
-        ROS_INFO("state1_coordX->values[0]: %f",state1_coordX->values[0]);
-        ROS_INFO("state1_coordY->values[0]: %f",state1_coordY->values[0]);
-        ROS_INFO("state1_coordYaw->values[0]: %f",state1_coordYaw->values[0]);
-        ROS_INFO("######################");
+        // // ROS_INFO("extract path dla stanow:");
+        // // ROS_INFO("stan0 X: %f",state0_coordX->values[0]);
+        // // ROS_INFO("stan0 Y: %f",state0_coordY->values[0]);
+        // // ROS_INFO("stan0 Yaw %f",state0_coordYaw->values[0]);
+        // // ROS_INFO("stan1 X: %f",state1_coordX->values[0]);
+        // // ROS_INFO("stan1 Y: %f",state1_coordY->values[0]);
+        // // ROS_INFO("stan1 Yaw: %f",state1_coordYaw->values[0]);
 
-        // punkt 0
+
+        // // // ROS_INFO("OTRZYMANE WSPOLRZEDNE 2 STANOW");
+        // // // ROS_INFO(" ");
+        // // // ROS_INFO("state0_coordX->values[0]: %f",state0_coordX->values[0]);
+        // // // ROS_INFO("state0_coordY->values[0]: %f",state0_coordY->values[0]);
+        // // // ROS_INFO("state0_coordYaw->values[0]: %f",state0_coordYaw->values[0]);
+        // // // ROS_INFO("state1_coordX->values[0]: %f",state1_coordX->values[0]);
+        // // // ROS_INFO("state1_coordY->values[0]: %f",state1_coordY->values[0]);
+        // // // ROS_INFO("state1_coordYaw->values[0]: %f",state1_coordYaw->values[0]);
+        // // // ROS_INFO("######################");
+
+        // // // // punkt 0
         th0_in_s0 = 0.0;
         x0_in_s0 = 0.0;
         y0_in_s0 = 0.0;
 
-        // wyrazenie punktu 1 w ukladzie punktu 0
+        // // // // // wyrazenie punktu 1 w ukladzie punktu 0
+        // th1_in_s0 = state0_coordYaw->values[0] - state1_coordYaw->values[0]; // na pewno 0 - 1
+        // x1_in_s0 = state1_coordX->values[0]*cos(th1_in_s0) - state1_coordY->values[0]*sin(th1_in_s0);
+        // y1_in_s0 = state1_coordX->values[0]*sin(th1_in_s0) + state1_coordY->values[0]*cos(th1_in_s0);
+        
         th1_in_s0 = state0_coordYaw->values[0] - state1_coordYaw->values[0]; // na pewno 0 - 1
-        x1_in_s0 = state1_coordX->values[0]*cos(th1_in_s0) - state1_coordY->values[0]*sin(th1_in_s0);
-        y1_in_s0 = state1_coordX->values[0]*sin(th1_in_s0) + state1_coordY->values[0]*cos(th1_in_s0);
+        x1_in_s0 = (state1_coordX->values[0]-state0_coordX->values[0])*cos(th1_in_s0) - (state1_coordY->values[0]-state0_coordY->values[0])*sin(th1_in_s0);
+        y1_in_s0 = (state1_coordX->values[0]-state0_coordX->values[0])*sin(th1_in_s0) + (state1_coordY->values[0]-state0_coordY->values[0])*cos(th1_in_s0);
+
+        // // ROS_INFO("1: %f",state1_coordX->values[0]*cos(th1_in_s0));
+        // // ROS_INFO("2: %f",state1_coordY->values[0]*sin(th1_in_s0));
+        // // ROS_INFO("3 %f",state1_coordX->values[0]*sin(th1_in_s0));
+        // // ROS_INFO("4 %f",state1_coordY->values[0]*cos(th1_in_s0));
+
+        // ROS_INFO("#############");
+        // ROS_INFO("th1_in_s0: %f",th1_in_s0);
+        // ROS_INFO("x1_in_s0: %f",x1_in_s0);
+        // ROS_INFO("y1_in_s0 %f",y1_in_s0);
+
+
 
         double k_vall = 0.0;
         factors res;
@@ -550,28 +702,65 @@ nav_msgs::Path Planner2D::extractPath(ob::ProblemDefinition* pdef){
         e = res.value5;
         f = res.value6;
 
-        if (x1_in_s0 < 0) signn = -1.0;
+        if (abs(th1_in_s0) >= M_PI/2)
+        {
+            ROS_INFO("------------------- war3 -----------------------");
+            continue;
+        }
+
+        if (x1_in_s0 < 0)
+        {
+            signn= -1.0;
+            //continue;
+        }
         else signn= 1.0;
-        
-        ROS_INFO("WSPOLRZEDNE PUNKTU PIERWSZEGO W UKLADZIE 0");
-        ROS_INFO(" ");
+
+        // // // ROS_INFO("WSPOLRZEDNE PUNKTU PIERWSZEGO W UKLADZIE 0");
         ROS_INFO("th1_in_s0: %f",th1_in_s0);
         ROS_INFO("x1_in_s0: %f",x1_in_s0);
         ROS_INFO("y1_in_s0: %f",y1_in_s0);
-        ROS_INFO("######################");
+        
+        // // // ROS_INFO("######################");
 
         for (double i = 0.0; i < abs(x1_in_s0); i=i+0.1)
         {
-            x_wielomian = (x0_in_s0+i)*signn;
+            //x_wielomian = (x0_in_s0+i)*signn;
+            x_wielomian = x0_in_s0+i*signn;
             y_wielomian = a*pow(x_wielomian,5)+b*pow(x_wielomian,4)+c*pow(x_wielomian,3)+d*pow(x_wielomian,2)+e*x_wielomian + f;
             // zamiana na wartosci globalne
-            x_wielomian_global = state0_coordX->values[0] + x_wielomian*cos((-1)*th1_in_s0) - y_wielomian*sin((-1)*th1_in_s0);
-            y_wielomian_global = state0_coordY->values[0] + x_wielomian*sin((-1)*th1_in_s0) + y_wielomian*cos((-1)*th1_in_s0);
+            // x_wielomian_global = state0_coordX->values[0] + x_wielomian*cos((-1.0)*th1_in_s0) - y_wielomian*sin((-1.0)*th1_in_s0);
+            // y_wielomian_global = state0_coordY->values[0] + x_wielomian*sin((-1.0)*th1_in_s0) + y_wielomian*cos((-1.0)*th1_in_s0);
 
-            tan_th_wielomian = 5*a*pow(x_wielomian,4)+4*b*pow(x_wielomian,3)+3*c*pow(x_wielomian,2),2*d*x_wielomian+e;
-            th_wielomian = atan(tan_th_wielomian);
-            th_wielomian_global = state0_coordYaw->values[0] + th_wielomian;
+
+            x_wielomian_global = state0_coordX->values[0] + x_wielomian*cos(th1_in_s0) + y_wielomian*sin(th1_in_s0);
+            y_wielomian_global = state0_coordY->values[0] + x_wielomian*(-1.0)*sin(th1_in_s0) + y_wielomian*cos(th1_in_s0);
+
+
+        //     tan_th_wielomian = 5*a*pow(x_wielomian,4)+4*b*pow(x_wielomian,3)+3*c*pow(x_wielomian,2),2*d*x_wielomian+e;
+        //     th_wielomian = atan(tan_th_wielomian);
+        //     th_wielomian_global = state0_coordYaw->values[0] + th_wielomian;
         
+        //     // ROS_INFO("x_wielomian: %f",x_wielomian_global);
+        //     // ROS_INFO("y_wielomian: %f",y_wielomian_global);
+        //     // ROS_INFO("theta+global: %f",th_wielomian_global);
+        //     //std::cin.get();
+
+            if ((x_wielomian_global >= occupancyMap.info.width || x_wielomian_global <= 0.0)||(y_wielomian_global >= occupancyMap.info.height || y_wielomian_global <= 0.0)) {
+                ROS_INFO("------------------- war2 -----------------------");
+                break;
+            }
+
+            max_curve = tan(beta_defined)/robot_height; // zmienic nazwy robot_height z robot_width
+            curve = (20.0*a*pow(x_wielomian,3)+12.0*b*pow(x_wielomian,2)+6.0*c*x_wielomian+2.0*d)/(pow(1+tan_th_wielomian*tan_th_wielomian,(3/2)));
+            if (curve>max_curve)
+            {
+                ROS_INFO("------------------- war3 -----------------------");
+                break;
+            }
+
+        // ROS_INFO("goal_x: %f",goal_x);
+        // ROS_INFO("goal_y: %f",goal_y);
+        // ROS_INFO("goal_yaw: %f",yaw_goal);
 
         //ob::RealVectorStateSpace::StateType *coordX = state1->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(0);
         //ob::RealVectorStateSpace::StateType *coordY = state1->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(1);
@@ -580,30 +769,40 @@ nav_msgs::Path Planner2D::extractPath(ob::ProblemDefinition* pdef){
         // make quaternion
         tf::Quaternion q_path;
         q_path.setRPY(0.0,0.0,th_wielomian_global);
+        //q_path.setRPY(0.0,0.0,state0_coordYaw->values[0]);
         // fill in the ROS PoseStamped structure...
         geometry_msgs::PoseStamped poseMsg;
         poseMsg.pose.position.x = x_wielomian_global;
         poseMsg.pose.position.y = y_wielomian_global;
+        // poseMsg.pose.position.x = state0_coordX->values[0];
+        // poseMsg.pose.position.y = state0_coordY->values[0];
         poseMsg.pose.position.z = 0.01;
         poseMsg.pose.orientation.w = q_path[3];
         poseMsg.pose.orientation.x = q_path[0];
         poseMsg.pose.orientation.y = q_path[1];
         poseMsg.pose.orientation.z = q_path[2];
-        poseMsg.header.frame_id = "/map";
+        poseMsg.header.frame_id = "map";
         poseMsg.header.stamp = ros::Time::now();
         plannedPath.poses.push_back(poseMsg);
-        //ROS_INFO("x_wielomian_global: %f",x_wielomian_global);
-        //ROS_INFO("y_wielomian_global: %f",y_wielomian_global);
-        //ROS_INFO("th_wielomian_global: %f",th_wielomian_global);
+        // ROS_INFO("x_wielomian_global: %f",x_wielomian_global);
+        // ROS_INFO("y_wielomian_global: %f",y_wielomian_global);
+        // ROS_INFO("th_wielomian_global: %f",th_wielomian_global);
+
+        //Point st_point(state0_coordX->values[0],state0_coordY->values[0],"st_point",1.0,1.0,0.2,q_path[0],q_path[1],q_path[2],q_path[3]);
+        //st_point.publish();
         
-        if (x_wielomian_global == goal_x && y_wielomian_global == goal_y) // dodac jeszcze orientacje
+        if ((x_wielomian_global == goal_x) && (y_wielomian_global == goal_y) && (th_wielomian_global == yaw_goal)) 
+        // if ((state0_coordX->values[0] == goal_x) && (state0_coordY->values[0] == goal_y) && (state0_coordYaw->values[0] == yaw_goal)) 
         {
+            ROS_INFO("MAM KONIEC");
             break;
         }
         }
     }
     return plannedPath;
 }
+
+
 
 
 /*
@@ -670,7 +869,7 @@ nav_msgs::Path Planner2D::planPath(const nav_msgs::OccupancyGrid& globalMap,cons
     goal_x = gl_pt.pose.position.x;
     goal_y = gl_pt.pose.position.y;
     start_x = st_pt.pose.position.x;
-    start_y = st_pt.pose.position.y;
+    start_y = st_pt.pose.position.y; 
     // goal quaternion
     tf::Quaternion q_goal(gl_pt.pose.orientation.x,gl_pt.pose.orientation.y,gl_pt.pose.orientation.z,gl_pt.pose.orientation.w);
     tf::Matrix3x3(q_goal).getRPY(roll_goal, pitch_goal, yaw_goal);
@@ -682,12 +881,12 @@ nav_msgs::Path Planner2D::planPath(const nav_msgs::OccupancyGrid& globalMap,cons
     // Set the state validity checker 
     si->setStateValidityChecker(isStateValid);
     // set State Validity Checking Resolution (avoid going through the walls)
-    si->setStateValidityCheckingResolution(0.02);
+    //si->setStateValidityCheckingResolution(0.5);
     // Set the motion validator
     ob::MotionValidatorPtr mv(new myMotionValidator(si));
     si->setMotionValidator(mv);
     si->setup();
-    std::cout<<"############################";
+
 
     // create start and goal states
     std::vector<double> start_vector = {start_x,start_y,yaw_start};
@@ -705,7 +904,26 @@ nav_msgs::Path Planner2D::planPath(const nav_msgs::OccupancyGrid& globalMap,cons
     // Set the start and goal states for the problem definition. 
     pdef->setStartAndGoalStates(start, goal);
     // Create an instance of a planner 
-    ob::PlannerPtr planner(new og::LazyPRMstar(si));
+    og::LazyPRMstar* planner2 = new og::LazyPRMstar(si);
+    //planner2->setConnectionStrategy();
+    planner2->setRange(10.0);
+    //planner2->setNearestNeighbors();
+    //og::KStarStrategy<> strategy
+    //og::KStarStrategy<Milestone> strategy = new og::KStrategy();
+    //planner2->setConnectionStrategy(strategy);
+    //const auto strategy = KBoundedStrategy<Vertex>(5, 10.0, getDefaultNearestNeighbors(planner2));
+    // unsigned int k = 20;
+    // unsigned int milestone_Count = 0;
+    // unsigned int edge_Count = 0;
+    //planner2->og::LazyPRM::setMaxNearestNeighbors(k);
+    // milestone_Count = planner2->milestoneCount();
+    // edge_Count = planner2->edgeCount();
+
+    // ROS_INFO("milestone_count: %u",milestone_Count);
+    // ROS_INFO("edge_Count: %u",edge_Count);
+
+    ob::PlannerPtr planner(planner2);
+    //ob::PlannerPtr planner(new og::RRT(si));
     // Tell the planner which problem we are interested in solving 
     planner->setProblemDefinition(pdef);
     // Make sure all the settings for the space and planner are in order. 
@@ -713,12 +931,34 @@ nav_msgs::Path Planner2D::planPath(const nav_msgs::OccupancyGrid& globalMap,cons
     planner->setup();
     // close file with data
     myfile2.close();
-    ROS_INFO("################################## TUTAAAAAAAAAAAJ #############################");
+
     // solve motion planning problem
-    ob::PlannerStatus solved = planner->ob::Planner::solve(1.0);
+    ob::PlannerStatus solved = planner->ob::Planner::solve(20.0);
+
+
+    ob::PlannerData* planner_data = new ob::PlannerData(si); 
+    planner->getPlannerData(*planner_data);
+
+
+    // fb.open ("properties",std::ios::out);
+    // planner->printProperties(os);
+    // fb.close();
+
+    // fb.open ("settings",std::ios::out);
+    // planner->printSettings(os);
+    // fb.close();
+
+
+    // fb.open ("graph2",std::ios::out);
+    // planner_data->printGraphviz(os);
+    // fb.close();
+
+    std::cout<< solved <<"\n";
+    ROS_INFO("@ %f @",planner2->getRange());
+    //std::cin.get();
     // if solved == true, a solution was found
-    ROS_INFO("################################## TUTAAAAAAAAAAAJ #############################");
     nav_msgs::Path plannedPath;
+    
     if (solved) 
     {
         std::cout<<"SOLVEEEEEEEED";

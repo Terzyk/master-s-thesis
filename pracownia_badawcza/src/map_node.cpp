@@ -22,7 +22,7 @@ visualization_msgs::Marker robot_coord;
 // time variables 
 ros::WallTime start_planning, end_planning;
 // variable for counting, how many times should the program plan path, if = 1 only one path will be made
-int iter_paths = 1;
+int iter_paths = 1 ;
 // variable for counting, how many times program planned path
 int made_paths = 0;
 // robot coord publisher
@@ -89,6 +89,10 @@ void robot_move(nav_msgs::Path path)
     robot_coord.header.stamp = ros::Time::now();
     robot_coord.pose.position.x = start2_point.pose.position.x;
     robot_coord.pose.position.y = start2_point.pose.position.y;
+    robot_coord.pose.orientation.x = start2_point.pose.orientation.x;
+    robot_coord.pose.orientation.y = start2_point.pose.orientation.y;
+    robot_coord.pose.orientation.z = start2_point.pose.orientation.z;
+    robot_coord.pose.orientation.w = start2_point.pose.orientation.w;
     marker_pub.publish(robot_coord);
     ros::Duration(0.5).sleep();
     for (int i=0;i<path.poses.size();i++)
@@ -100,12 +104,12 @@ void robot_move(nav_msgs::Path path)
           robot_coord.pose.orientation.y = path.poses[i].pose.orientation.y;
           robot_coord.pose.orientation.z = path.poses[i].pose.orientation.z;
           robot_coord.pose.orientation.w = path.poses[i].pose.orientation.w;
-          ROS_INFO("x_pos: %f",path.poses[i].pose.position.x);
-          ROS_INFO("y_pos: %f",path.poses[i].pose.position.y);
-          ROS_INFO("x: %f",path.poses[i].pose.orientation.x);
-          ROS_INFO("y: %f",path.poses[i].pose.orientation.y);
-          ROS_INFO("z: %f",path.poses[i].pose.orientation.z);
-          ROS_INFO("w: %f",path.poses[i].pose.orientation.w);
+          // ROS_INFO("x_pos: %f",path.poses[i].pose.position.x);
+          // ROS_INFO("y_pos: %f",path.poses[i].pose.position.y);
+          // ROS_INFO("x: %f",path.poses[i].pose.orientation.x);
+          // ROS_INFO("y: %f",path.poses[i].pose.orientation.y);
+          // ROS_INFO("z: %f",path.poses[i].pose.orientation.z);
+          // ROS_INFO("w: %f",path.poses[i].pose.orientation.w);
           marker_pub.publish(robot_coord);
           ros::Duration(0.5).sleep();
       }
