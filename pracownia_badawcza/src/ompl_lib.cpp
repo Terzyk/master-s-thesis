@@ -7,6 +7,7 @@
 #include <ostream>
 #include "../include/pracownia_badawcza/points.hpp"
 #include "ompl/base/MotionValidator.h"
+#include "ompl/tools/benchmark/Benchmark.h"
 # define M_PI           3.14159265358979323846  /* pi */
 
 using namespace std;
@@ -408,10 +409,12 @@ bool myMotionValidator::checkMotion(const ob::State *s0, const ob::State *s1) co
     double th_wielomian = 0.0;
     double tan_th_wielomian = 0.0;
     double max_curve = 0.0;
+    double x1_in_s0,y1_in_s0,th1_in_s0;
 
     int mapIndex = 0;
     int occupancyMapValue = 0;
     double signn = 1.0;
+    double sign_x,sign_y,sign_yaw;
     bool is_available = true;
     // get coord of the first state
     const ob::RealVectorStateSpace::StateType *state1_coordX = s1->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(0);
@@ -433,128 +436,200 @@ bool myMotionValidator::checkMotion(const ob::State *s0, const ob::State *s1) co
     // ROS_INFO("WSPOLRZEDNE PUNKTU PIERWSZEGO W UKLADZIE 0");
 
     // wyrazenie punktu 1 w ukladzie punktu 0
-    // double th1_in_s0 = state0_coordYaw->values[0] - state1_coordYaw->values[0]; // na pewno 0 - 1
+    //th1_in_s0 = state0_coordYaw->values[0] - state1_coordYaw->values[0]; // na pewno 0 - 1
     // double x1_in_s0 = state1_coordX->values[0]*cos(th1_in_s0) - state1_coordY->values[0]*sin(th1_in_s0);
     // double y1_in_s0 = state1_coordX->values[0]*sin(th1_in_s0) + state1_coordY->values[0]*cos(th1_in_s0);
-    // // uklad 0
-    // double x0_in_s0 = 0.0;
-    // double y0_in_s0 = 0.0;
-    // double th0_in_s0 = 0.0;
+
+    th1_in_s0 = state1_coordYaw->values[0] - state0_coordYaw->values[0];
+    x1_in_s0 = (state1_coordX->values[0]-state0_coordX->values[0])*cos(th1_in_s0) - (state1_coordY->values[0]-state0_coordY->values[0])*sin(th1_in_s0);
+    y1_in_s0 = (state1_coordX->values[0]-state0_coordX->values[0])*sin(th1_in_s0) + (state1_coordY->values[0]-state0_coordY->values[0])*cos(th1_in_s0);
+
+
+    //basic 1
+        // if ((state1_coordX->values[0] >= state0_coordX->values[0]) && (state1_coordY->values[0] >= state0_coordY->values[0]))
+        // {
+        //     ROS_INFO("1");
+        //     // if (state1_coordYaw->values[0] >= state0_coordYaw->values[0]) th1_in_s0 = state0_coordYaw->values[0] - state1_coordYaw->values[0];
+        //     // else th1_in_s0 = state0_coordYaw->values[0] - state1_coordYaw->values[0];
+        //     th1_in_s0 = state0_coordYaw->values[0] - state1_coordYaw->values[0];
+        //     x1_in_s0 = (state1_coordX->values[0]-state0_coordX->values[0])*cos(th1_in_s0) - (state1_coordY->values[0]-state0_coordY->values[0])*sin(th1_in_s0);
+        //     y1_in_s0 = (state1_coordX->values[0]-state0_coordX->values[0])*sin(th1_in_s0) + (state1_coordY->values[0]-state0_coordY->values[0])*cos(th1_in_s0);
+        // }
+        // if ((state1_coordX->values[0] >= state0_coordX->values[0]) && (state1_coordY->values[0] < state0_coordY->values[0]))
+        // {
+        //     ROS_INFO("4");
+        //     th1_in_s0 = state0_coordYaw->values[0] - state1_coordYaw->values[0];
+        //     x1_in_s0 = (state1_coordX->values[0]-state0_coordX->values[0])*cos(th1_in_s0) - (-1.0)*((state1_coordY->values[0]-state0_coordY->values[0])*sin(th1_in_s0));
+        //     y1_in_s0 = (state1_coordX->values[0]-state0_coordX->values[0])*sin(th1_in_s0) + (-1.0)*((state1_coordY->values[0]-state0_coordY->values[0])*cos(th1_in_s0));
+        // }
+        // if ((state1_coordX->values[0] < state0_coordX->values[0]) && (state1_coordY->values[0] >= state0_coordY->values[0]))
+        // {
+        //     ROS_INFO("2");
+        //     th1_in_s0 = state0_coordYaw->values[0] - state1_coordYaw->values[0];
+        //     x1_in_s0 = (-1.0)*((state1_coordX->values[0]-state0_coordX->values[0])*cos(th1_in_s0)) - (state1_coordY->values[0]-state0_coordY->values[0])*sin(th1_in_s0);
+        //     y1_in_s0 = (-1.0)*((state1_coordX->values[0]-state0_coordX->values[0])*sin(th1_in_s0)) + (state1_coordY->values[0]-state0_coordY->values[0])*cos(th1_in_s0);
+        // }
+        // if ((state1_coordX->values[0] < state0_coordX->values[0]) && (state1_coordY->values[0] < state0_coordY->values[0]))
+        // {
+        //     ROS_INFO("3"); //ogarnac temat katow
+        //     th1_in_s0 = state0_coordYaw->values[0] - state1_coordYaw->values[0];
+        //     x1_in_s0 = (-1.0)*((state1_coordX->values[0]-state0_coordX->values[0])*cos(th1_in_s0) - (state1_coordY->values[0]-state0_coordY->values[0])*sin(th1_in_s0));
+        //     y1_in_s0 = (-1.0)*((state1_coordX->values[0]-state0_coordX->values[0])*sin(th1_in_s0) + (state1_coordY->values[0]-state0_coordY->values[0])*cos(th1_in_s0));
+        // }
+
+    // if ((state1_coordX->values[0] >= state0_coordX->values[0]) && (state1_coordY->values[0] >= state0_coordY->values[0]))
+    // {
+    //     ROS_INFO("1");
+    //     sign_x = 1.0;
+    //     sign_y = 1.0;
+    // }
+    // if ((state1_coordX->values[0] >= state0_coordX->values[0]) && (state1_coordY->values[0] < state0_coordY->values[0]))
+    // {
+    //     ROS_INFO("4");
+    //     sign_x = 1.0;
+    //     sign_y = -1.0;
+    // }
+    // if ((state1_coordX->values[0] < state0_coordX->values[0]) && (state1_coordY->values[0] >= state0_coordY->values[0]))
+    // {
+    //     ROS_INFO("2");
+    //     sign_x = -1.0;
+    //     sign_y = 1.0;
+    // }
+    // if ((state1_coordX->values[0] < state0_coordX->values[0]) && (state1_coordY->values[0] < state0_coordY->values[0]))
+    // {
+    //     ROS_INFO("3");
+    //     sign_x = -1.0;
+    //     sign_y = -1.0;
+    // }
+
+
+    // uklad 0
+    double x0_in_s0 = 0.0;
+    double y0_in_s0 = 0.0;
+    double th0_in_s0 = 0.0;
 
     // //zalozenie ze orientacja punktu 1 w lokalnym ukladzie jest co do bezwglednej wartosci mniejsza niz pi/2
-    //  if (abs(th1_in_s0) >= M_PI/2)
-    //  {
-    //     //ROS_INFO("warunek nr 1");
-    //     return false;
-    //  }
+     if (abs(th1_in_s0) >= M_PI/2)
+     {
+        //ROS_INFO("warunek nr 1");
+        return false;
+     }
          
 
 
-    // // ROS_INFO("th1_in_s0: %f",th1_in_s0);
-    // // ROS_INFO("x1_in_s0: %f",x1_in_s0);
-    // // ROS_INFO("y1_in_s0: %f",y1_in_s0);
+    ROS_INFO("th1_in_s0: %f",th1_in_s0);
+    ROS_INFO("x1_in_s0: %f",x1_in_s0);
+    ROS_INFO("y1_in_s0: %f",y1_in_s0);
 
   
-    // double k_vall = 0.0;
-    // factors res;
-    // res = calculate_factors(k_vall,th0_in_s0,x0_in_s0,y0_in_s0,th1_in_s0,x1_in_s0,y1_in_s0);
-    // a = res.value1;
-    // b = res.value2;
-    // c = res.value3;
-    // d = res.value4;
-    // e = res.value5;
-    // f = res.value6;
+    double k_vall = 0.0;
+    factors res;
+    res = calculate_factors(k_vall,th0_in_s0,x0_in_s0,y0_in_s0,th1_in_s0,x1_in_s0,y1_in_s0);
+    a = res.value1;
+    b = res.value2;
+    c = res.value3;
+    d = res.value4;
+    e = res.value5;
+    f = res.value6;
 
 
     // // sprawdzenie znaku 
-    // if (x1_in_s0 < 0)
-    // {
-    //     signn= -1.0;
-    //     //return false;
-    // } 
-    // else signn= 1.0;
+    if (x1_in_s0 < 0)
+    {
+        signn= -1.0;
+        // return false;
+    } 
+    else signn= 1.0;
 
     // // wartosc funkcji wielomianowej licze dla wspolrzednych ukladu lokalnego  i zamieniam spowrotem na uklad globalny
-    // for (double i = 0.0; i < abs(x1_in_s0); i=i+0.1)
-    // {
-    //     // i to jest wartość w pętl która z każdą iteracją zwiększa się o 10cm
-    //     //x_wielomian = (x0_in_s0+i)*signn;
-    //     x_wielomian = x0_in_s0+i*signn;
-    //     y_wielomian = a*pow(x_wielomian,5)+b*pow(x_wielomian,4)+c*pow(x_wielomian,3)+d*pow(x_wielomian,2)+e*x_wielomian + f;
-    //     // zamiana na wartosci globalne
-    //     // x_wielomian_global = state0_coordX->values[0] + x_wielomian*cos((-1.0)*th1_in_s0) - y_wielomian*sin((-1.0)*th1_in_s0);
-    //     // y_wielomian_global = state0_coordY->values[0] + x_wielomian*sin((-1.0)*th1_in_s0) + y_wielomian*cos((-1.0)*th1_in_s0);
+    for (double i = 0.0; i < abs(x1_in_s0); i=i+0.1)
+    {
+            tan_th_wielomian = 5*a*pow(x_wielomian,4)+4*b*pow(x_wielomian,3)+3*c*pow(x_wielomian,2),2*d*x_wielomian+e;
+            th_wielomian = atan(tan_th_wielomian);
+            th_wielomian_global = th1_in_s0+th_wielomian;
 
-    //     x_wielomian_global = state0_coordX->values[0] + x_wielomian*cos(th1_in_s0) + y_wielomian*sin(th1_in_s0);
-    //     y_wielomian_global = state0_coordY->values[0] + x_wielomian*(-1.0)*sin(th1_in_s0) + y_wielomian*cos(th1_in_s0);
+            //x_wielomian = (x0_in_s0+i)*signn;
+            x_wielomian = x0_in_s0+i*signn;
+            y_wielomian = a*pow(x_wielomian,5)+b*pow(x_wielomian,4)+c*pow(x_wielomian,3)+d*pow(x_wielomian,2)+e*x_wielomian + f;
+            // zamiana na wartosci globalne
+            // x_wielomian_global = state0_coordX->values[0] + x_wielomian*cos((-1.0)*th_wielomian_global) - y_wielomian*sin((-1.0)*th_wielomian_global);
+            // y_wielomian_global = state0_coordY->values[0] + x_wielomian*sin((-1.0)*th_wielomian_global) + y_wielomian*cos((-1.0)*th_wielomian_global);
 
-    //     tan_th_wielomian = 5*a*pow(x_wielomian,4)+4*b*pow(x_wielomian,3)+3*c*pow(x_wielomian,2),2*d*x_wielomian+e;
-    //     th_wielomian = atan(tan_th_wielomian);
-    //     //th_wielomian = atan(tan_th_wielomian);
-    //     th_wielomian_global = state0_coordYaw->values[0] + th_wielomian;
-
-    //     //ROS_INFO("y_wielomian_global: %f",y_wielomian_global);
-    //     //ROS_INFO("x_wielomian_global: %f",x_wielomian_global);
+            x_wielomian_global = state0_coordX->values[0] + x_wielomian*cos(th_wielomian_global) + y_wielomian*sin(th_wielomian_global);
+            y_wielomian_global = state0_coordY->values[0] + x_wielomian*sin((-1.0)*th_wielomian_global) + y_wielomian*cos(th_wielomian_global);
 
 
-    //     if ((x_wielomian_global >= occupancyMap.info.width || x_wielomian_global <= 0.0)||(y_wielomian_global >= occupancyMap.info.height || y_wielomian_global <= 0.0))
-    //     { 
-    //         is_available=false;
-    //         //ROS_INFO("warunek nr 2");
-    //         // ROS_INFO("y_wielomian_global: %f",y_wielomian_global);
-    //         // ROS_INFO("x_wielomian_global: %f",x_wielomian_global);
-    //         break;
-    //     }
-    //     else 
-    //     {
-    //         is_available=true;
-    //     }
+            // x_wielomian_global = state0_coordX->values[0] + sign_x*(x_wielomian*cos(th1_in_s0) + y_wielomian*sin(th1_in_s0));
+            // y_wielomian_global = state0_coordY->values[0] + sign_y*(x_wielomian*(-1.0)*sin(th1_in_s0) + y_wielomian*cos(th1_in_s0));
 
-    //     // ROS_INFO("x_wielomian: %f",x_wielomian);
-    //     // ROS_INFO("y_wielomian: %f",y_wielomian);
-    //     // ROS_INFO("th1_in_s0: %f",th1_in_s0);
 
-    //     // ROS_INFO("x_wielomian_global: %f",x_wielomian_global);
-    //     // ROS_INFO("y_wielomian_global: %f",y_wielomian_global);
-
-    //     mapIndex = (int)(y_wielomian_global)*occupancyMap.info.width +(int)(x_wielomian_global);
-    //     occupancyMapValue = occupancyMap.data[mapIndex];
-    //     // ROS_INFO("mapIndex: %d",mapIndex);
-    //     //ROS_INFO("occupancyMapValue: %d",occupancyMapValue);
-    //     if ((occupancyMapValue > 0) || (occupancyMapValue < 0))
-    //     //if (occupancyMapValue == 100)
-    //         {
-    //             is_available=false;
-    //             //ROS_INFO("warunek nr 3");
-    //             break;
-    //         }
-    //     else 
-    //         {
-    //             is_available=true;
-    //         }
+            // tan_th_wielomian = 5*a*pow(x_wielomian,4)+4*b*pow(x_wielomian,3)+3*c*pow(x_wielomian,2),2*d*x_wielomian+e;
+            // th_wielomian = atan(tan_th_wielomian);
+            // th_wielomian_global = th1_in_s0 + th_wielomian;
         
-    //     // maksymalna krzywizna:
-    //     max_curve = tan(beta_defined)/robot_height; // zmienic nazwy robot_height z robot_width
-    //     // L=1.2
-    //     // dodalem abs
-    //     //curve = (20.0*a*pow(x_wielomian,3)+12.0*b*pow(x_wielomian,2)+6.0*c*x_wielomian+2.0*d)/(pow(1+tan_th_wielomian*tan_th_wielomian,(3/2)));
-    //     curve = abs(20.0*a*pow(x_wielomian,3)+12.0*b*pow(x_wielomian,2)+6.0*c*x_wielomian+2.0*d)/(pow(1+tan_th_wielomian*tan_th_wielomian,(3/2)));
-    //     // ROS_INFO("curve: %f",curve);
-    //     // ROS_INFO("max_curve: %f",max_curve);
-    //     if (curve<=max_curve) is_available=true;
-    //     else 
-    //     {
-    //         is_available=false;
-    //         //ROS_INFO("warunek nr 4");
-    //         break;
-    //     }
+            ROS_INFO("x_wielomian: %f",x_wielomian_global);
+            ROS_INFO("y_wielomian: %f", y_wielomian_global);
+            ROS_INFO("th_wielomian_global: %f",th_wielomian_global);
 
-    //     // zapis danych do pliku
-    //     // myfile2.open("dane_global9.txt",ofstream::app);
-    //     // myfile2 << x_wielomian_global <<","<<y_wielomian_global<<","<<th_wielomian_global<<std::endl;
-    //     // myfile2.close();
 
-    // }
+        if ((x_wielomian_global >= occupancyMap.info.width || x_wielomian_global <= 0.0)||(y_wielomian_global >= occupancyMap.info.height || y_wielomian_global <= 0.0))
+        { 
+            is_available=false;
+            //ROS_INFO("warunek nr 2");
+            // ROS_INFO("y_wielomian_global: %f",y_wielomian_global);
+            // ROS_INFO("x_wielomian_global: %f",x_wielomian_global);
+            break;
+        }
+        else 
+        {
+            is_available=true;
+        }
+
+        // ROS_INFO("x_wielomian: %f",x_wielomian);
+        // ROS_INFO("y_wielomian: %f",y_wielomian);
+        // ROS_INFO("th1_in_s0: %f",th1_in_s0);
+
+        // ROS_INFO("x_wielomian_global: %f",x_wielomian_global);
+        // ROS_INFO("y_wielomian_global: %f",y_wielomian_global);
+
+        mapIndex = (int)(y_wielomian_global)*occupancyMap.info.width +(int)(x_wielomian_global);
+        occupancyMapValue = occupancyMap.data[mapIndex];
+        // ROS_INFO("mapIndex: %d",mapIndex);
+        //ROS_INFO("occupancyMapValue: %d",occupancyMapValue);
+         //if (occupancyMapValue == 100)
+        if ((occupancyMapValue > 0) || (occupancyMapValue < 0))
+            {
+                is_available=false;
+                //ROS_INFO("warunek nr 3");
+                break;
+            }
+        else 
+            {
+                is_available=true;
+            }
+        
+        // maksymalna krzywizna:
+        max_curve = tan(beta_defined)/robot_height; // zmienic nazwy robot_height z robot_width
+        // L=1.2
+        // dodalem abs
+        //curve = (20.0*a*pow(x_wielomian,3)+12.0*b*pow(x_wielomian,2)+6.0*c*x_wielomian+2.0*d)/(pow(1+tan_th_wielomian*tan_th_wielomian,(3/2)));
+        curve = (20.0*a*pow(x_wielomian,3)+12.0*b*pow(x_wielomian,2)+6.0*c*x_wielomian+2.0*d)/(pow(1+tan_th_wielomian*tan_th_wielomian,(3/2)));
+        // ROS_INFO("curve: %f",curve);
+        // ROS_INFO("max_curve: %f",max_curve);
+        if (curve<=max_curve) is_available=true;
+        else 
+        {
+            is_available=false;
+            //ROS_INFO("warunek nr 4");
+            break;
+        }
+
+        // zapis danych do pliku
+        // myfile2.open("dane_global9.txt",ofstream::app);
+        // myfile2 << x_wielomian_global <<","<<y_wielomian_global<<","<<th_wielomian_global<<std::endl;
+        // myfile2.close();
+
+    }
 
 
     // bool is_available = false;
@@ -572,31 +647,31 @@ bool myMotionValidator::checkMotion(const ob::State *s0, const ob::State *s1) co
 
 
     //is_available = true;
-    // ix = 1;
-    // if (ix==0) 
-    // {   
-    //     ROS_INFO("First loop");
-    //     ix = 1;
-    //     is_available = true;
-    //     return false;
-    // }
-    // else 
-    // {
-    // //ROS_INFO("Rest of the loop");
-    // if (is_available)
-    // {
-    //     ROS_INFO("Motion Validator: True");
-    //     return true;
-    // }
-    // else 
-    // {
-    //     ROS_INFO("Motion Validator: False");
-    //     return false;
-    // }
-    // }
+    ix = 1;
+    if (ix==0) 
+    {   
+        ROS_INFO("First loop");
+        ix = 1;
+        is_available = true;
+        return false;
+    }
+    else 
+    {
+    //ROS_INFO("Rest of the loop");
+    if (is_available)
+    {
+        ROS_INFO("Motion Validator: True");
+        return true;
+    }
+    else 
+    {
+        ROS_INFO("Motion Validator: False");
+        return false;
+    }
+    }
 
     
-    return true;
+    //return true;
      
 }
 
@@ -616,6 +691,7 @@ nav_msgs::Path Planner2D::extractPath(ob::ProblemDefinition* pdef){
     double beta_defined = M_PI/3;
     double curve = 0.0;
     double max_curve = 0.0;
+    double sign_x,sign_y;
 
     nav_msgs::Path plannedPath;
     plannedPath.header.frame_id = "map";
@@ -633,7 +709,7 @@ nav_msgs::Path Planner2D::extractPath(ob::ProblemDefinition* pdef){
     ROS_INFO("width: %d",occupancyMap.info.width);
     ROS_INFO("height: %d",occupancyMap.info.height);
 
-    // std::cin.get();
+    //std::cin.get();
     for(int i=0; i<path_length-1; ++i)
     {
 
@@ -675,10 +751,69 @@ nav_msgs::Path Planner2D::extractPath(ob::ProblemDefinition* pdef){
         // th1_in_s0 = state0_coordYaw->values[0] - state1_coordYaw->values[0]; // na pewno 0 - 1
         // x1_in_s0 = state1_coordX->values[0]*cos(th1_in_s0) - state1_coordY->values[0]*sin(th1_in_s0);
         // y1_in_s0 = state1_coordX->values[0]*sin(th1_in_s0) + state1_coordY->values[0]*cos(th1_in_s0);
-        
-        th1_in_s0 = state0_coordYaw->values[0] - state1_coordYaw->values[0]; // na pewno 0 - 1
+        // th1_in_s0 = state0_coordYaw->values[0] - state1_coordYaw->values[0]; // na pewno 0 - 1
+        // basic
+        th1_in_s0 = state1_coordYaw->values[0] - state0_coordYaw->values[0];
         x1_in_s0 = (state1_coordX->values[0]-state0_coordX->values[0])*cos(th1_in_s0) - (state1_coordY->values[0]-state0_coordY->values[0])*sin(th1_in_s0);
         y1_in_s0 = (state1_coordX->values[0]-state0_coordX->values[0])*sin(th1_in_s0) + (state1_coordY->values[0]-state0_coordY->values[0])*cos(th1_in_s0);
+
+        // if ((state1_coordX->values[0] >= state0_coordX->values[0]) && (state1_coordY->values[0] >= state0_coordY->values[0]))
+        // {
+        //     ROS_INFO("1");
+        //     // if (state1_coordYaw->values[0] >= state0_coordYaw->values[0]) th1_in_s0 = state0_coordYaw->values[0] - state1_coordYaw->values[0];
+        //     // else th1_in_s0 = state0_coordYaw->values[0] - state1_coordYaw->values[0];
+        //     th1_in_s0 = state0_coordYaw->values[0] - state1_coordYaw->values[0];
+        //     x1_in_s0 = (state1_coordX->values[0]-state0_coordX->values[0])*cos(th1_in_s0) - (state1_coordY->values[0]-state0_coordY->values[0])*sin(th1_in_s0);
+        //     y1_in_s0 = (state1_coordX->values[0]-state0_coordX->values[0])*sin(th1_in_s0) + (state1_coordY->values[0]-state0_coordY->values[0])*cos(th1_in_s0);
+        // }
+        // if ((state1_coordX->values[0] >= state0_coordX->values[0]) && (state1_coordY->values[0] < state0_coordY->values[0]))
+        // {
+        //     ROS_INFO("4");
+        //     th1_in_s0 = state0_coordYaw->values[0] - state1_coordYaw->values[0];
+        //     x1_in_s0 = (state1_coordX->values[0]-state0_coordX->values[0])*cos(th1_in_s0) - (-1.0)*((state1_coordY->values[0]-state0_coordY->values[0])*sin(th1_in_s0));
+        //     y1_in_s0 = (state1_coordX->values[0]-state0_coordX->values[0])*sin(th1_in_s0) + (-1.0)*((state1_coordY->values[0]-state0_coordY->values[0])*cos(th1_in_s0));
+        // }
+        // if ((state1_coordX->values[0] < state0_coordX->values[0]) && (state1_coordY->values[0] >= state0_coordY->values[0]))
+        // {
+        //     ROS_INFO("2");
+        //     th1_in_s0 = state0_coordYaw->values[0] - state1_coordYaw->values[0];
+        //     x1_in_s0 = (-1.0)*((state1_coordX->values[0]-state0_coordX->values[0])*cos(th1_in_s0)) - (state1_coordY->values[0]-state0_coordY->values[0])*sin(th1_in_s0);
+        //     y1_in_s0 = (-1.0)*((state1_coordX->values[0]-state0_coordX->values[0])*sin(th1_in_s0)) + (state1_coordY->values[0]-state0_coordY->values[0])*cos(th1_in_s0);
+        // }
+        // if ((state1_coordX->values[0] < state0_coordX->values[0]) && (state1_coordY->values[0] < state0_coordY->values[0]))
+        // {
+        //     ROS_INFO("3"); //ogarnac temat katow
+        //     th1_in_s0 = state0_coordYaw->values[0] - state1_coordYaw->values[0];
+        //     x1_in_s0 = (-1.0)*((state1_coordX->values[0]-state0_coordX->values[0])*cos(th1_in_s0) - (state1_coordY->values[0]-state0_coordY->values[0])*sin(th1_in_s0));
+        //     y1_in_s0 = (-1.0)*((state1_coordX->values[0]-state0_coordX->values[0])*sin(th1_in_s0) + (state1_coordY->values[0]-state0_coordY->values[0])*cos(th1_in_s0));
+        // }
+        // x1_in_s0 = (state1_coordX->values[0]-state0_coordX->values[0])*cos(th1_in_s0) - (state1_coordY->values[0]-state0_coordY->values[0])*sin(th1_in_s0);
+        // y1_in_s0 = (state1_coordX->values[0]-state0_coordX->values[0])*sin(th1_in_s0) + (state1_coordY->values[0]-state0_coordY->values[0])*cos(th1_in_s0);
+
+        // if ((state1_coordX->values[0] >= state0_coordX->values[0]) && (state1_coordY->values[0] >= state0_coordY->values[0]))
+        // {
+        //     ROS_INFO("1");
+        //     sign_x = 1.0;
+        //     sign_y = 1.0;
+        // }
+        // if ((state1_coordX->values[0] >= state0_coordX->values[0]) && (state1_coordY->values[0] < state0_coordY->values[0]))
+        // {
+        //     ROS_INFO("4");
+        //     sign_x = 1.0;
+        //     sign_y = -1.0;
+        // }
+        // if ((state1_coordX->values[0] < state0_coordX->values[0]) && (state1_coordY->values[0] >= state0_coordY->values[0]))
+        // {
+        //     ROS_INFO("2");
+        //     sign_x = -1.0;
+        //     sign_y = 1.0;
+        // }
+        // if ((state1_coordX->values[0] < state0_coordX->values[0]) && (state1_coordY->values[0] < state0_coordY->values[0]))
+        // {
+        //     ROS_INFO("3");
+        //     sign_x = -1.0;
+        //     sign_y = -1.0;
+        // }
 
         // // ROS_INFO("1: %f",state1_coordX->values[0]*cos(th1_in_s0));
         // // ROS_INFO("2: %f",state1_coordY->values[0]*sin(th1_in_s0));
@@ -704,7 +839,7 @@ nav_msgs::Path Planner2D::extractPath(ob::ProblemDefinition* pdef){
 
         if (abs(th1_in_s0) >= M_PI/2)
         {
-            ROS_INFO("------------------- war3 -----------------------");
+            ROS_INFO("------------------------- war1 ------------------------------");
             continue;
         }
 
@@ -724,29 +859,38 @@ nav_msgs::Path Planner2D::extractPath(ob::ProblemDefinition* pdef){
 
         for (double i = 0.0; i < abs(x1_in_s0); i=i+0.1)
         {
+
+            tan_th_wielomian = 5*a*pow(x_wielomian,4)+4*b*pow(x_wielomian,3)+3*c*pow(x_wielomian,2),2*d*x_wielomian+e;
+            th_wielomian = atan(tan_th_wielomian);
+            th_wielomian_global = th1_in_s0+th_wielomian;
+
             //x_wielomian = (x0_in_s0+i)*signn;
             x_wielomian = x0_in_s0+i*signn;
             y_wielomian = a*pow(x_wielomian,5)+b*pow(x_wielomian,4)+c*pow(x_wielomian,3)+d*pow(x_wielomian,2)+e*x_wielomian + f;
             // zamiana na wartosci globalne
-            // x_wielomian_global = state0_coordX->values[0] + x_wielomian*cos((-1.0)*th1_in_s0) - y_wielomian*sin((-1.0)*th1_in_s0);
-            // y_wielomian_global = state0_coordY->values[0] + x_wielomian*sin((-1.0)*th1_in_s0) + y_wielomian*cos((-1.0)*th1_in_s0);
+            // x_wielomian_global = state0_coordX->values[0] + x_wielomian*cos((-1.0)*th_wielomian_global) - y_wielomian*sin((-1.0)*th_wielomian_global);
+            // y_wielomian_global = state0_coordY->values[0] + x_wielomian*sin((-1.0)*th_wielomian_global) + y_wielomian*cos((-1.0)*th_wielomian_global);
+
+            x_wielomian_global = state0_coordX->values[0] + x_wielomian*cos(th_wielomian_global) + y_wielomian*sin(th_wielomian_global);
+            y_wielomian_global = state0_coordY->values[0] + x_wielomian*sin((-1.0)*th_wielomian_global) + y_wielomian*cos(th_wielomian_global);
 
 
-            x_wielomian_global = state0_coordX->values[0] + x_wielomian*cos(th1_in_s0) + y_wielomian*sin(th1_in_s0);
-            y_wielomian_global = state0_coordY->values[0] + x_wielomian*(-1.0)*sin(th1_in_s0) + y_wielomian*cos(th1_in_s0);
+            // x_wielomian_global = state0_coordX->values[0] + sign_x*(x_wielomian*cos(th1_in_s0) + y_wielomian*sin(th1_in_s0));
+            // y_wielomian_global = state0_coordY->values[0] + sign_y*(x_wielomian*(-1.0)*sin(th1_in_s0) + y_wielomian*cos(th1_in_s0));
 
 
-        //     tan_th_wielomian = 5*a*pow(x_wielomian,4)+4*b*pow(x_wielomian,3)+3*c*pow(x_wielomian,2),2*d*x_wielomian+e;
-        //     th_wielomian = atan(tan_th_wielomian);
-        //     th_wielomian_global = state0_coordYaw->values[0] + th_wielomian;
+            // tan_th_wielomian = 5*a*pow(x_wielomian,4)+4*b*pow(x_wielomian,3)+3*c*pow(x_wielomian,2),2*d*x_wielomian+e;
+            // th_wielomian = atan(tan_th_wielomian);
+            // th_wielomian_global = th1_in_s0 + th_wielomian;
         
-        //     // ROS_INFO("x_wielomian: %f",x_wielomian_global);
-        //     // ROS_INFO("y_wielomian: %f",y_wielomian_global);
-        //     // ROS_INFO("theta+global: %f",th_wielomian_global);
+            ROS_INFO("x_wielomian: %f",x_wielomian_global);
+            ROS_INFO("y_wielomian: %f", y_wielomian_global);
+            ROS_INFO("th_wielomian_global: %f",th_wielomian_global);
+            //ROS_INFO("th1_in_s0: %f",th1_in_s0);
         //     //std::cin.get();
 
             if ((x_wielomian_global >= occupancyMap.info.width || x_wielomian_global <= 0.0)||(y_wielomian_global >= occupancyMap.info.height || y_wielomian_global <= 0.0)) {
-                ROS_INFO("------------------- war2 -----------------------");
+                ROS_INFO("------------------------------ war2 -----------------------------------");
                 break;
             }
 
@@ -754,7 +898,7 @@ nav_msgs::Path Planner2D::extractPath(ob::ProblemDefinition* pdef){
             curve = (20.0*a*pow(x_wielomian,3)+12.0*b*pow(x_wielomian,2)+6.0*c*x_wielomian+2.0*d)/(pow(1+tan_th_wielomian*tan_th_wielomian,(3/2)));
             if (curve>max_curve)
             {
-                ROS_INFO("------------------- war3 -----------------------");
+                ROS_INFO("---------------------------- war3 --------------------------------");
                 break;
             }
 
@@ -765,7 +909,6 @@ nav_msgs::Path Planner2D::extractPath(ob::ProblemDefinition* pdef){
         //ob::RealVectorStateSpace::StateType *coordX = state1->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(0);
         //ob::RealVectorStateSpace::StateType *coordY = state1->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(1);
         //ob::RealVectorStateSpace::StateType *coordYaw = state1->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(2);
-
         // make quaternion
         tf::Quaternion q_path;
         q_path.setRPY(0.0,0.0,th_wielomian_global);
@@ -784,9 +927,9 @@ nav_msgs::Path Planner2D::extractPath(ob::ProblemDefinition* pdef){
         poseMsg.header.frame_id = "map";
         poseMsg.header.stamp = ros::Time::now();
         plannedPath.poses.push_back(poseMsg);
-        // ROS_INFO("x_wielomian_global: %f",x_wielomian_global);
-        // ROS_INFO("y_wielomian_global: %f",y_wielomian_global);
-        // ROS_INFO("th_wielomian_global: %f",th_wielomian_global);
+        ROS_INFO("goal_x: %f",goal_x);
+        ROS_INFO("goal_y: %f",goal_y);
+        ROS_INFO("yaw_goal: %f",yaw_goal);
 
         //Point st_point(state0_coordX->values[0],state0_coordY->values[0],"st_point",1.0,1.0,0.2,q_path[0],q_path[1],q_path[2],q_path[3]);
         //st_point.publish();
@@ -906,7 +1049,7 @@ nav_msgs::Path Planner2D::planPath(const nav_msgs::OccupancyGrid& globalMap,cons
     // Create an instance of a planner 
     og::LazyPRMstar* planner2 = new og::LazyPRMstar(si);
     //planner2->setConnectionStrategy();
-    planner2->setRange(10.0);
+    // planner2->setRange(10.0);
     //planner2->setNearestNeighbors();
     //og::KStarStrategy<> strategy
     //og::KStarStrategy<Milestone> strategy = new og::KStrategy();
@@ -923,7 +1066,7 @@ nav_msgs::Path Planner2D::planPath(const nav_msgs::OccupancyGrid& globalMap,cons
     // ROS_INFO("edge_Count: %u",edge_Count);
 
     ob::PlannerPtr planner(planner2);
-    //ob::PlannerPtr planner(new og::RRT(si));
+    ob::PlannerPtr planner_RRT(new og::RRT(si));
     // Tell the planner which problem we are interested in solving 
     planner->setProblemDefinition(pdef);
     // Make sure all the settings for the space and planner are in order. 
@@ -931,24 +1074,43 @@ nav_msgs::Path Planner2D::planPath(const nav_msgs::OccupancyGrid& globalMap,cons
     planner->setup();
     // close file with data
     myfile2.close();
-
+ 
     // solve motion planning problem
-    ob::PlannerStatus solved = planner->ob::Planner::solve(20.0);
+    ob::PlannerStatus solved = planner->ob::Planner::solve(15.0);
 
 
     ob::PlannerData* planner_data = new ob::PlannerData(si); 
     planner->getPlannerData(*planner_data);
 
 
+    // --------- benchmark --------------
+    // ompl::geometric::SimpleSetup ss(si);
+    // ss.setStartState(start);
+    // ss.setGoalState(goal);
+    // // First we create a benchmark class:
+    // ompl::tools::Benchmark b(ss, "my experiment");
+    // // Optionally, specify some benchmark parameters (doesn't change how the benchmark is run)
+    // b.addExperimentParameter("num_dofs", "INTEGER", "6");
+    // b.addExperimentParameter("num_obstacles", "INTEGER", "10");
+    // // We add the planners to evaluate.
+    // b.addPlanner(planner);
+    // b.addPlanner(planner_RRT);
+
+    // ompl::tools::Benchmark::Request req;
+    // req.maxTime = 5.0;
+    // req.maxMem = 100.0;
+    // req.runCount = 50;
+    // req.displayProgress = true;
+    // b.benchmark(req);
+    // b.saveResultsToFile();
+
+    // --------------- saving conf to graph ----------------
     // fb.open ("properties",std::ios::out);
     // planner->printProperties(os);
     // fb.close();
-
     // fb.open ("settings",std::ios::out);
     // planner->printSettings(os);
     // fb.close();
-
-
     // fb.open ("graph2",std::ios::out);
     // planner_data->printGraphviz(os);
     // fb.close();
