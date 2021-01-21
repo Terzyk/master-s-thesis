@@ -4,7 +4,13 @@
 #include <visualization_msgs/Marker.h>
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 #include <ompl/geometric/planners/prm/LazyPRMstar.h>
+#include <ompl/geometric/planners/prm/LazyPRM.h>
+#include <ompl/geometric/planners/rrt/RRT.h>
 #include "ompl/base/MotionValidator.h"
+#include "ompl/geometric/planners/prm/ConnectionStrategy.h"
+#include <ompl/base/PlannerData.h>
+#include <vector>
+#include <ompl/tools/config/SelfConfig.h>
 
 namespace ob = ompl::base;
 namespace map_node {
@@ -54,6 +60,18 @@ public:
     bool checkMotion(const ob::State *s1, const ob::State *s2) const override;
     bool checkMotion(const ob::State *s1, const ob::State *s2, std::pair<ob::State *, double> &lastValid) const override;
 };
+
+// class myPlannerData : public ob::PlannerData
+// {
+// public:
+//     myPlannerData(ob::SpaceInformationPtr si) : PlannerData(si)
+//     {
+
+//     }
+//     // implement getPlannerData()
+//     void getPlannerData(ob::PlannerData &data) const override;
+// };
+
 
 
 } /* namespace */
