@@ -36,8 +36,8 @@ int main(int argc, char **argv)
 {
   double q_start_x = 0.0;
   double q_start_y = 0.0;
-  // double q_start_z = -0.7871745;
-  // double q_start_w = -0.5733046;
+  // double q_start_z = -0.1305262;
+  // double q_start_w = 0.9914449;
   double q_start_z = 0.0;
   double q_start_w = 1.0;
 
