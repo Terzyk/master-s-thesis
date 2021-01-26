@@ -36,10 +36,10 @@ int main(int argc, char **argv)
 {
   double q_start_x = 0.0;
   double q_start_y = 0.0;
-  // double q_start_z = -0.258819;
-  // double q_start_w = 0.9659258;
-  double q_start_z = 0.0;
-  double q_start_w = 1.0;
+  double q_start_z = -0.258819;
+  double q_start_w = 0.9659258;
+  // double q_start_z = 0.0;
+  // double q_start_w = 1.0;
 
   // double q_goal_x = 0.0;
   // double q_goal_y = 0.0;
@@ -48,7 +48,7 @@ int main(int argc, char **argv)
 
   double q_goal_x = 0.0;
   double q_goal_y = 0.0;
-  double q_goal_z = -0.1305262;
+  double q_goal_z = 0.1305262;
   double q_goal_w = 0.9914449;
   // double q_goal_z = 0.0;
   // double q_goal_w = 1.0;
