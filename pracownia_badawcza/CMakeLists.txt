@@ -62,6 +62,9 @@ target_link_libraries(map_node
 add_executable(points src/points.cpp)
 target_link_libraries(points ${catkin_LIBRARIES})
 
+add_executable(local_plan src/local_plan.cpp)
+target_link_libraries(local_plan ${catkin_LIBRARIES})
+
 
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
