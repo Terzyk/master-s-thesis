@@ -454,7 +454,7 @@ bool myMotionValidator::checkMotion(const ob::State *s0, const ob::State *s1) co
     // double x1_in_s0 = state1_coordX->values[0]*cos(th1_in_s0) - state1_coordY->values[0]*sin(th1_in_s0);
     // double y1_in_s0 = state1_coordX->values[0]*sin(th1_in_s0) + state1_coordY->values[0]*cos(th1_in_s0);
 
-    th1_in_s0 = state1_coordYaw->values[0] - state0_coordYaw->values[0];
+    th1_in_s0 = state0_coordYaw->values[0] - state1_coordYaw->values[0];
     x1_in_s0 = (state1_coordX->values[0]-state0_coordX->values[0])*cos(th1_in_s0) - (state1_coordY->values[0]-state0_coordY->values[0])*sin(th1_in_s0);
     y1_in_s0 = (state1_coordX->values[0]-state0_coordX->values[0])*sin(th1_in_s0) + (state1_coordY->values[0]-state0_coordY->values[0])*cos(th1_in_s0);
 
@@ -561,7 +561,7 @@ bool myMotionValidator::checkMotion(const ob::State *s0, const ob::State *s1) co
     {
             tan_th_wielomian = tan(th1_in_s0);
             th_wielomian = atan(tan_th_wielomian);
-            th_wielomian_global = th_wielomian;//state0_coordYaw->values[0] + th_wielomian;
+            th_wielomian_global = th_wielomian;//state0_coordYaw->values[0] - th_wielomian;//state0_coordYaw->values[0] + th_wielomian;
 
             //x_wielomian = (x0_in_s0+i)*signn;
             x_wielomian = x0_in_s0+i*signn;
@@ -582,9 +582,13 @@ bool myMotionValidator::checkMotion(const ob::State *s0, const ob::State *s1) co
             // th_wielomian = atan(tan_th_wielomian);
             // th_wielomian_global = th1_in_s0 + th_wielomian;
         
-            // ROS_INFO("x_wielomian: %f",x_wielomian_global);
-            // ROS_INFO("y_wielomian: %f", y_wielomian_global);
-            // ROS_INFO("th_wielomian_global: %f",th_wielomian_global);
+            ROS_INFO("x_wielomian: %f",x_wielomian_global);
+            ROS_INFO("y_wielomian: %f", y_wielomian_global);
+            ROS_INFO("th_wielomian_global: %f",th_wielomian_global);
+            ROS_INFO("th_wielomian: %f",th_wielomian);            
+            ROS_INFO("state0_coordYaw->values[0]: %f",state0_coordYaw->values[0]);
+            ROS_INFO("state1_coordYaw->values[0]: %f",state1_coordYaw->values[0]);
+
 
 
         if ((x_wielomian_global >= occupancyMap.info.width || x_wielomian_global <= 0.0)||(y_wielomian_global >= occupancyMap.info.height || y_wielomian_global <= 0.0))
@@ -780,7 +784,8 @@ nav_msgs::Path Planner2D::extractPath(ob::ProblemDefinition* pdef){
         // y1_in_s0 = state1_coordX->values[0]*sin(th1_in_s0) + state1_coordY->values[0]*cos(th1_in_s0);
         // th1_in_s0 = state0_coordYaw->values[0] - state1_coordYaw->values[0]; // na pewno 0 - 1
         // basic
-        th1_in_s0 = state1_coordYaw->values[0] - state0_coordYaw->values[0];
+        ROS_INFO("------------------------- NEW POINTS ------------------------------");
+        th1_in_s0 = state0_coordYaw->values[0] - state1_coordYaw->values[0];
         x1_in_s0 = (state1_coordX->values[0]-state0_coordX->values[0])*cos(th1_in_s0) - (state1_coordY->values[0]-state0_coordY->values[0])*sin(th1_in_s0);
         y1_in_s0 = (state1_coordX->values[0]-state0_coordX->values[0])*sin(th1_in_s0) + (state1_coordY->values[0]-state0_coordY->values[0])*cos(th1_in_s0);
 
@@ -880,19 +885,19 @@ nav_msgs::Path Planner2D::extractPath(ob::ProblemDefinition* pdef){
         else signn= 1.0;
 
         // // // ROS_INFO("WSPOLRZEDNE PUNKTU PIERWSZEGO W UKLADZIE 0");
-        ROS_INFO("th1_in_s0: %f",th1_in_s0);
-        ROS_INFO("x1_in_s0: %f",x1_in_s0);
-        ROS_INFO("y1_in_s0: %f",y1_in_s0);
+        ROS_INFO("state1_coordYaw->values[0]: %f",state1_coordYaw->values[0]);
+        ROS_INFO("state0_coordYaw->values[0]: %f",state0_coordYaw->values[0]);
+        // ROS_INFO("y1_in_s0: %f",y1_in_s0);
         
         // // // ROS_INFO("######################");
 
-        for (double i = 0.1; i <= abs(x1_in_s0); i=i+0.1)
+        for (double i = 0.1; i <= abs(x1_in_s0); i=i+0.5)
         {
             x_wielomian = x0_in_s0+i*signn;
 
-            tan_th_wielomian = 5*a*pow(x_wielomian,4)+4*b*pow(x_wielomian,3)+3*c*pow(x_wielomian,2),2*d*x_wielomian+e;
+            tan_th_wielomian = tan(th1_in_s0);
             th_wielomian = atan(tan_th_wielomian);
-            th_wielomian_global = th_wielomian;//state0_coordYaw->values[0] + th_wielomian;
+            th_wielomian_global = th_wielomian;//state0_coordYaw->values[0] - th_wielomian;
 
             // tan_th_wielomian = tan(th1_in_s0);
             // th_wielomian = atan(tan_th_wielomian);
@@ -912,8 +917,8 @@ nav_msgs::Path Planner2D::extractPath(ob::ProblemDefinition* pdef){
             ROS_INFO("y_wielomian: %f", y_wielomian_global);
             ROS_INFO("th_wielomian_global: %f",th_wielomian_global);
             ROS_INFO("th_wielomian: %f",th_wielomian);            
-            ROS_INFO("state0_coordYaw->values[0]: %f",state0_coordYaw->values[0]);
-            ROS_INFO("state1_coordYaw->values[0]: %f",state1_coordYaw->values[0]);
+            ROS_INFO("th1_ins0: %f",th1_in_s0);
+            // ROS_INFO("state1_coordYaw->values[0]: %f",state1_coordYaw->values[0]);
     
 
 
@@ -1107,22 +1112,22 @@ nav_msgs::Path Planner2D::planPath(const nav_msgs::OccupancyGrid& globalMap,cons
     // ROS_INFO("milestone_count: %u",milestone_Count);
     // ROS_INFO("edge_Count: %u",edge_Count);
 
-    ob::PlannerPtr planner(planner2);
-    ob::PlannerPtr planner_RRT(new og::RRT(si));
+    // ob::PlannerPtr planner(planner2);
+    // ob::PlannerPtr planner_RRT(new og::RRT(si));
     // Tell the planner which problem we are interested in solving 
-    planner->setProblemDefinition(pdef);
+    planner2->setProblemDefinition(pdef);
     // Make sure all the settings for the space and planner are in order. 
     // This will also lead to the runtime computation of the state validity checking resolution. 
-    planner->setup();
+    planner2->setup();
     // close file with data
     myfile2.close();
  
     // solve motion planning problem
-    ob::PlannerStatus solved = planner->ob::Planner::solve(10.0);
+    ob::PlannerStatus solved = planner2->ob::Planner::solve(10.0);
 
 
-    ob::PlannerData* planner_data = new ob::PlannerData(si); 
-    planner->getPlannerData(*planner_data);
+    // ob::PlannerData* planner_data = new ob::PlannerData(si); 
+    // planner->getPlannerData(*planner_data);
 
 
     // --------- benchmark --------------

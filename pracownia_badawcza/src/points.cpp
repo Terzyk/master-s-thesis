@@ -48,7 +48,7 @@ int main(int argc, char **argv)
 
   double q_goal_x = 0.0;
   double q_goal_y = 0.0;
-  double q_goal_z = 0.1305262;
+  double q_goal_z = -0.1305262;
   double q_goal_w = 0.9914449;
   // double q_goal_z = 0.0;
   // double q_goal_w = 1.0;
@@ -58,14 +58,14 @@ int main(int argc, char **argv)
  
   ros::init(argc, argv, "points");
   //Point start_point(310.5,301.5,"start_point",1.0,1.0,0.5,q_start_x,q_start_y,q_start_z,q_start_w);
-  Point start_point(220.0,53.0,"start_point",0.0,1.0,0.0,q_start_x,q_start_y,q_start_z,q_start_w); //----------- dziala -----------
+  Point start_point(150.0,53.0,"start_point",0.0,1.0,0.0,q_start_x,q_start_y,q_start_z,q_start_w); //----------- dziala ----------- 250 i 53 obrot -30
   // Point start_point(250.0,333.0,"start_point",0.0,1.0,0.0,q_start_x,q_start_y,q_start_z,q_start_w); //part2
   // map1
   // Point end_point(210.5,351.5,"end_point",1.0,0.0,0.0);
   // map4
   //Point end_point(210.5,301.5,"end_point",1.0,0.0,0.0,q_goal_x,q_goal_y,q_goal_z,q_goal_w);
   //Point end_point(350.0, 370.0,"end_point",1.0,0.0,0.0,q_goal_x,q_goal_y,q_goal_z,q_goal_w);
-  Point end_point(320.0,80.0,"end_point",1.0,0.0,0.0,q_goal_x,q_goal_y,q_goal_z,q_goal_w); // ----------- dziala -----------
+  Point end_point(320.0,80.0,"end_point",1.0,0.0,0.0,q_goal_x,q_goal_y,q_goal_z,q_goal_w); // ----------- dziala ----------- 320 i 80 obrot 15
   //Point end_point(290.0,203.0,"end_point",1.0,0.0,0.0,q_goal_x,q_goal_y,q_goal_z,q_goal_w); //part2
   //Point robot(start_point.marker.pose.position.x,start_point.marker.pose.position.y,"robot_coordinates",0.0,0.0,1.0);
   ros::Rate loop_rate(10);
