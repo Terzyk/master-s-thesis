@@ -9,11 +9,12 @@
 #include "ompl/base/MotionValidator.h"
 #include "ompl/tools/benchmark/Benchmark.h"
 # define M_PI           3.14159265358979323846  /* pi */
+#include <boost/graph/adjacency_list.hpp>
 
 using namespace std;
 using namespace ros;
 
-
+using Vertex = boost::adjacency_list_traits<boost::vecS, boost::listS, boost::undirectedS>::vertex_descriptor;
 
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
@@ -408,6 +409,16 @@ factors calculate_factors(double k_val_st0,double k_val_st1,double th0,double x0
 
     return result;
 }
+
+
+bool ConnectionFilter_test(const Vertex &vertex1, const Vertex &vertex2)
+{
+    ROS_INFO("HALO");
+    return true;
+}
+
+std::function<bool (const Vertex &, const Vertex &)> myConnectionFilter = ConnectionFilter_test;
+
 
 bool myMotionValidator::checkMotion(const ob::State *s0, const ob::State *s1) const
 {
@@ -1097,6 +1108,7 @@ nav_msgs::Path Planner2D::planPath(const nav_msgs::OccupancyGrid& globalMap,cons
     og::LazyPRMstar* planner2 = new og::LazyPRMstar(si);
     //planner2->setConnectionStrategy();
     planner2->setRange(10.0);
+    planner2->setConnectionFilter(myConnectionFilter);
     //planner2->setNearestNeighbors();
     //og::KStarStrategy<> strategy
     //og::KStarStrategy<Milestone> strategy = new og::KStrategy();
@@ -1123,7 +1135,7 @@ nav_msgs::Path Planner2D::planPath(const nav_msgs::OccupancyGrid& globalMap,cons
     myfile2.close();
  
     // solve motion planning problem
-    ob::PlannerStatus solved = planner2->ob::Planner::solve(10.0);
+    ob::PlannerStatus solved = planner2->ob::Planner::solve(20.0);
 
 
     // ob::PlannerData* planner_data = new ob::PlannerData(si); 
