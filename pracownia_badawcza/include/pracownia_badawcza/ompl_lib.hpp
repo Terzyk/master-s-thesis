@@ -11,9 +11,11 @@
 #include <ompl/base/PlannerData.h>
 #include <vector>
 #include <ompl/tools/config/SelfConfig.h>
+#include "pracownia_badawcza/AddTwoInts.h"
+#include <cstdlib>
 
 namespace ob = ompl::base;
-namespace map_node {
+
 
 /*!
  * 2D planner example class
@@ -21,12 +23,10 @@ namespace map_node {
 class Planner2D
 {
 public:
+    ros::ServiceClient client;
+    
 
-    /*!
-   * Constructor.
-   * @param nodeHandle the ROS node handle.
-   */
-    Planner2D(ros::NodeHandle& _nodeHandle);
+    Planner2D(ros::ServiceClient& my_client);//, pracownia_badawcza::AddTwoInts& my_srv);
 
     /*!
    * Destructor.
@@ -41,9 +41,11 @@ public:
    * move robot
    */
     void robot_move(nav_msgs::Path path);
-private:
+    
+
     /// node handle
-    ros::NodeHandle& nodeHandle;
+    // ros::NodeHandle& nodeHandle;
+    
 
     /// extract path
     nav_msgs::Path extractPath(ompl::base::ProblemDefinition* pdef);
@@ -74,4 +76,3 @@ public:
 
 
 
-} /* namespace */

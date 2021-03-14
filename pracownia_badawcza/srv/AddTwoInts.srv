@@ -1,0 +1,9 @@
+float32 s1_x
+float32 s1_y
+float32 s1_yaw
+float32 s2_x
+float32 s2_y
+float32 s2_yaw
+---
+float32[] factors
+

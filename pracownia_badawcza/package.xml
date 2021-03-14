@@ -7,6 +7,8 @@
   <license>TODO</license>
   <buildtool_depend>catkin</buildtool_depend>
 
+  <build_depend>message_generation</build_depend>
+  <exec_depend>message_runtime</exec_depend>
   <depend>message_filters</depend>
   <depend>map_server</depend>
   <depend>nav_msgs</depend>
