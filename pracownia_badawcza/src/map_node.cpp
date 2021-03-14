@@ -119,12 +119,28 @@ void robot_move(nav_msgs::Path path)
 int main(int argc, char **argv)
 {
 
-  ros::init(argc, argv, "map_node");
+    ros::init(argc, argv, "map_node");
   //ros::Subscriber sub = n.subscribe("map", 1000, mapCallback);
+    ros::NodeHandle nodeHandle;
 
+    ros::ServiceClient client = nodeHandle.serviceClient<pracownia_badawcza::AddTwoInts>("add_two_ints",true);
+
+    // pracownia_badawcza::AddTwoInts srv;
+    // srv.request.a = 5;
+    // srv.request.b = 3;
+    
+    // if (client.call(srv))
+    // {
+    //     ROS_INFO("Sum: %ld", (long int)srv.response.sum);
+    // }
+    // else
+    // {
+    //     ROS_ERROR("Failed to call service add_two_ints");
+    // }
+    // std::cin.get();
     // create node handler
-    ros::NodeHandle nodeHandle("~");
-    map_node::Planner2D planner_(nodeHandle);
+
+    Planner2D plannerr(client);//,srv);
 
     // setup the ROS loop rate
     ros::Rate loop_rate(10);
@@ -140,14 +156,32 @@ int main(int argc, char **argv)
     // robot coord publisher
     marker_pub = nodeHandle.advertise<visualization_msgs::Marker>("robot_coordinates", 1000);
 
+    
+
+
+
   while (ros::ok())
     {
     if ((start2_point.pose.position.x > 0.0 && start2_point.pose.position.y > 0.0) && (goal2_point.pose.position.x > 0.0 && goal2_point.pose.position.y > 0.0 ))
     {
+
+        // srv.request.a = 5;
+        // srv.request.b = 3;
+        
+        // if (client.call(srv))
+        // {
+        //     ROS_INFO("Sum: %ld", (long int)srv.response.sum);
+        // }
+        // else
+        // {
+        //     ROS_ERROR("Failed to call service add_two_ints");
+        // }
+        // std::cin.get();
         nav_msgs::Path plannedPath;
+        // std::cout<<&client<<std::endl;
         // planning and measuring time
         start_planning = ros::WallTime::now();
-        plannedPath = planner_.planPath(globalMap,start2_point,goal2_point);
+        plannedPath = plannerr.planPath(globalMap,start2_point,goal2_point);
         end_planning = ros::WallTime::now();
         double execution_time = (end_planning - start_planning).toNSec() * 1e-6;
         ROS_INFO_STREAM("Exectution time (ms): " << execution_time);

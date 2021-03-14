@@ -15,11 +15,20 @@ find_package(catkin REQUIRED COMPONENTS
   message_filters
   tf
   tf_conversions
+  message_generation
 )
 
 find_package(OMPL)
 
+add_service_files(
+  FILES
+  AddTwoInts.srv
+)
 
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+)
 
 catkin_package(
   INCLUDE_DIRS include
@@ -35,6 +44,8 @@ include_directories(
 
 
 
+
+
 ## Declare a C++ library
 file(GLOB pracownia_badawcza_sources
     src/ompl_lib.cpp
@@ -44,14 +55,17 @@ file(GLOB pracownia_badawcza_headers
     include/pracownia_badawcza/ompl_lib/*.hpp
 )
 
+
 add_library(${PROJECT_NAME}_library STATIC ${pracownia_badawcza_sources} ${pracownia_badawcza_headers}
 )
+add_dependencies(${PROJECT_NAME}_library pracownia_badawcza_gencpp)
 target_link_libraries(${PROJECT_NAME}_library
    ${catkin_LIBRARIES}
 )
 
+
 add_executable(map_node src/map_node.cpp)
-add_dependencies(map_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(map_node pracownia_badawcza_gencpp ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(map_node 
 	${PROJECT_NAME}_library
 	${catkin_LIBRARIES}
@@ -59,13 +73,28 @@ target_link_libraries(map_node
 )
 
 
+
 add_executable(points src/points.cpp)
 target_link_libraries(points ${catkin_LIBRARIES})
 
+
 add_executable(local_plan src/local_plan.cpp)
 target_link_libraries(local_plan ${catkin_LIBRARIES})
+add_dependencies(local_plan pracownia_badawcza_gencpp)
+
+
+
 
 
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+
+catkin_install_python(PROGRAMS src/add_two_ints_server.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+catkin_install_python(PROGRAMS src/neural_planner.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
 

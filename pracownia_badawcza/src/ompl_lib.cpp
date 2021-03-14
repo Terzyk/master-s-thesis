@@ -11,6 +11,7 @@
 # define M_PI           3.14159265358979323846  /* pi */
 #include <boost/graph/adjacency_list.hpp>
 #include "../include/pracownia_badawcza/planner.hpp"
+
 #include <ompl/geometric/planners/prm/PRM.h>
 
 
@@ -53,8 +54,14 @@ namespace og = ompl::geometric;
 
 int ix = 0;
 
-namespace map_node {
 
+
+
+// pracownia_badawcza::AddTwoInts *nn_srv;
+// ros::ServiceClient *nn_client;
+
+
+ros::ServiceClient *nn_client;
 
 //og::LazyPRMstar* planner2;
 // file for results
@@ -95,6 +102,8 @@ std::vector< double > top;
 std::vector< double > bottom;
 std::vector< double > dist;
 
+
+
 double a,b,c,d,e,f; //  wspolczynniki wielomianu
 struct factors
 {
@@ -108,10 +117,26 @@ struct factors
 
 
 
+// class_cf::class_cf(ompl::geometric::LazyPRMstar& cf_planner)
+// {
+//     pb_planner = &cf_planner;
+// }
+
 // constructor in which we create our space
-Planner2D::Planner2D(ros::NodeHandle& _nodeHandle)
-    : nodeHandle(_nodeHandle)
+Planner2D::Planner2D(ros::ServiceClient& my_client)
 {
+
+    nn_client = &my_client;
+    //nn_srv = &my_srv;
+    // std::cout<<&my_client<<std::endl;
+    // std::cout<<&nn_client<<std::endl;
+    // std::cout<<*my_client<<std::endl;
+    // std::cout<<*nn_client<<std::endl;
+
+    // ros::ServiceClient nn_client = nodeHandle.serviceClient<pracownia_badawcza::AddTwoInts>("add_two_ints");
+    // pracownia_badawcza::AddTwoInts nn_srv;
+    
+    
     for (double i=0.2; i<=robot_width ;i=i+0.2)
     {
         top.push_back(i);
@@ -418,24 +443,64 @@ factors calculate_factors(double k_val_st0,double k_val_st1,double th0,double x0
     return result;
 }
 
+// bool class_cf::operator() (const Vertex &vertex1, const Vertex &vertex2)
+// {
 
-bool ConnectionFilter_test(const Vertex &vertex1, const Vertex &vertex2)
+//     boost::property_map<og::PRM::Graph, og::PRM::vertex_state_t>::type my_stateProperty;
+//     const ob::State *s1 = planner2->getStateProperty(vertex1);
+
+
+//     return true;
+// }
+
+
+
+bool class_cf::cf_client(const ob::State *state1, const ob::State *state2)
 {
-    //boost::property_map<og::PRM::Graph, og::PRM::vertex_state_t>::type my_stateProperty;
-    //const ob::State *s1 = planner2->getStateProperty(vertex1);
-    ROS_INFO("HALO");
-    //my_stateProperty = my_planner::getStateProperty()
-    const ob::State *s1 = planner2.getStateProperty(vertex1);
-    const ob::State *s2 = planner2.getStateProperty(vertex2);
-    //auto my_st = my_planner.getStateProperty();
-   
-    // ob::State *s1 = my_stateProperty[*vertex1];
-    // ob::State *s2 = my_stateProperty[*vertex2];
+    // get coord of the first state
+    const ob::RealVectorStateSpace::StateType *state1_coordX = state1->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(0);
+    const ob::RealVectorStateSpace::StateType *state1_coordY = state1->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(1);
+    const ob::RealVectorStateSpace::StateType *state1_coordYaw = state1->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(2);
+    // get coord of the second state
+    const ob::RealVectorStateSpace::StateType *state2_coordX = state2->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(0);
+    const ob::RealVectorStateSpace::StateType *state2_coordY = state2->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(1);
+    const ob::RealVectorStateSpace::StateType *state2_coordYaw = state2->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(2);
 
+    pracownia_badawcza::AddTwoInts nn_srv;
+    nn_srv.request.s1_x = state1_coordX->values[0];
+    nn_srv.request.s1_y = state1_coordY->values[0];
+    nn_srv.request.s1_yaw = state1_coordYaw->values[0];
+    nn_srv.request.s2_x = state2_coordX->values[0];
+    nn_srv.request.s2_y = state2_coordY->values[0];
+    nn_srv.request.s2_yaw = state2_coordYaw->values[0];
+
+    // ROS_INFO("client request: s1_x: %f", nn_srv.request.s1_x);
+    // ROS_INFO("client request: s1_y: %f", nn_srv.request.s1_y);
+    // ROS_INFO("client request: s1_yaw: %f", nn_srv.request.s1_yaw);
+    // ROS_INFO("client request: s2_x: %f", nn_srv.request.s2_x);
+    // ROS_INFO("client request: s2_y: %f", nn_srv.request.s2_y);
+    // ROS_INFO("client request: s2_yaw: %f", nn_srv.request.s2_yaw);
+
+    if ((*nn_client).call(nn_srv))
+    {
+        ROS_INFO("SERVER RESPONSE:");
+        // ROS_INFO("server response: s1_x: %f", (float)nn_srv.response.factors[0]);
+        // ROS_INFO("server response: s1_y: %f", (float)nn_srv.response.factors[1]);
+        // ROS_INFO("server response: s1_yaw: %f", (float)nn_srv.response.factors[2]);
+        // ROS_INFO("server response: s2_x: %f", (float)nn_srv.response.factors[3]);
+        // ROS_INFO("server response: s2_y: %f", (float)nn_srv.response.factors[4]);
+        // ROS_INFO("server response: s2_yaw: %f", (float)nn_srv.response.factors[5]);
+    }
+    else
+    {
+        ROS_ERROR("Failed to call service add_two_ints");
+    }
+
+    // std::cin.get();
     return true;
 }
 
-std::function<bool (const Vertex &, const Vertex &)> myConnectionFilter = ConnectionFilter_test;
+
 
 
 bool myMotionValidator::checkMotion(const ob::State *s0, const ob::State *s1) const
@@ -1083,7 +1148,26 @@ nav_msgs::Path Planner2D::extractPath(ob::ProblemDefinition* pdef){
 nav_msgs::Path Planner2D::planPath(const nav_msgs::OccupancyGrid& globalMap,const visualization_msgs::Marker &st_pt,const visualization_msgs::Marker &gl_pt)
 {
 
+    // nn_client = &my_client;
+    // nn_srv = &my_srv;
+    // nn_client = &my_client;
+    // nn_srv = &my_srv;
+    // std::cout<<&my_client<<std::endl;
+    // std::cout<<&nn_client<<std::endl;
+
+    // my_srv.request.a = 5;
+    // my_srv.request.b = 3;
     
+    // if (my_client.call(my_srv))
+    // {
+    //     ROS_INFO("Sum: %ld", (long int)my_srv.response.sum);
+    // }
+    // else
+    // {
+    //     ROS_ERROR("Failed to call service add_two_ints");
+    // }
+    // std::cin.get();
+
     occupancyMap = globalMap;
     goal_x = gl_pt.pose.position.x;
     goal_y = gl_pt.pose.position.y;
@@ -1123,14 +1207,20 @@ nav_msgs::Path Planner2D::planPath(const nav_msgs::OccupancyGrid& globalMap,cons
     // Set the start and goal states for the problem definition. 
     pdef->setStartAndGoalStates(start, goal);
     // Create an instance of a planner 
-    og::LazyPRMstar* planner2 = new my_planner(si);
+    my_planner* planner2 = new my_planner(si);
     //planner2 = new my_planner(si);
     //planner2->setConnectionStrategy();
     planner2->setRange(10.0);
 
     //my_stateProperty = planner2->getStateProperty();
 
+    class_cf cc(planner2);
+    std::function<bool (const Vertex &, const Vertex &)> myConnectionFilter = cc;
     planner2->setConnectionFilter(myConnectionFilter);
+    //class_cf c_filter = new class_cf(planner2);
+    //class_cf c = class_cf(planner2);
+
+    // planner2->setConnectionFilter(myConnectionFilter);
     //planner2->setNearestNeighbors();
     //og::KStarStrategy<> strategy
     //og::KStarStrategy<Milestone> strategy = new og::KStrategy();
@@ -1150,6 +1240,9 @@ nav_msgs::Path Planner2D::planPath(const nav_msgs::OccupancyGrid& globalMap,cons
     // ob::PlannerPtr planner_RRT(new og::RRT(si));
     // Tell the planner which problem we are interested in solving 
     planner2->setProblemDefinition(pdef);
+
+    // CONN_FILTER my_ConnectionFilter;
+
     // Make sure all the settings for the space and planner are in order. 
     // This will also lead to the runtime computation of the state validity checking resolution. 
     planner2->setup();
@@ -1210,5 +1303,5 @@ nav_msgs::Path Planner2D::planPath(const nav_msgs::OccupancyGrid& globalMap,cons
     return plannedPath;
 }
 
-} 
+
 
