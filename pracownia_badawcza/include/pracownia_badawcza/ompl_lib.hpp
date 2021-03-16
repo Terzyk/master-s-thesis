@@ -11,43 +11,32 @@
 #include <ompl/base/PlannerData.h>
 #include <vector>
 #include <ompl/tools/config/SelfConfig.h>
-#include "pracownia_badawcza/AddTwoInts.h"
+#include "pracownia_badawcza/LNP.h"
 #include <cstdlib>
 
 namespace ob = ompl::base;
 
-
-/*!
- * 2D planner example class
- */
+// 2D planner example class
 class Planner2D
 {
 public:
     ros::ServiceClient client;
     
+    // Constructor
+    Planner2D(ros::ServiceClient& my_client);
 
-    Planner2D(ros::ServiceClient& my_client);//, pracownia_badawcza::AddTwoInts& my_srv);
-
-    /*!
-   * Destructor.
-   */
+ 
+    // Destructor.
     virtual ~Planner2D();
 
-    /*!
-   * plan path
-   */
+
+    // plan path
     nav_msgs::Path planPath(const nav_msgs::OccupancyGrid& globalMap,const visualization_msgs::Marker& st_pt,const visualization_msgs::Marker& gl_pt);
-    /*!
-   * move robot
-   */
+    
+    // move robot
     void robot_move(nav_msgs::Path path);
     
-
-    /// node handle
-    // ros::NodeHandle& nodeHandle;
-    
-
-    /// extract path
+    // extract path
     nav_msgs::Path extractPath(ompl::base::ProblemDefinition* pdef);
 };
 
@@ -63,16 +52,6 @@ public:
     bool checkMotion(const ob::State *s1, const ob::State *s2, std::pair<ob::State *, double> &lastValid) const override;
 };
 
-// class myPlannerData : public ob::PlannerData
-// {
-// public:
-//     myPlannerData(ob::SpaceInformationPtr si) : PlannerData(si)
-//     {
-
-//     }
-//     // implement getPlannerData()
-//     void getPlannerData(ob::PlannerData &data) const override;
-// };
 
 
 

@@ -13,15 +13,12 @@ namespace og = ompl::geometric;
 class my_planner : public ompl::geometric::LazyPRMstar
 {
     public: 
+
         my_planner(ob::SpaceInformationPtr si) : LazyPRMstar(si)
             {
 
             }
 
-        // boost::property_map<Graph, vertex_state_t>::type getStateProperty()
-        // {
-        //     return this -> stateProperty_;
-        // }
         ompl::base::State* getStateProperty(const Vertex v1) const
         {
             return this -> stateProperty_[v1];
@@ -32,14 +29,15 @@ class my_planner : public ompl::geometric::LazyPRMstar
 class class_cf
 {
     public:
-        //myConnectionFilter(my_planner &cf_planner(ob::SpaceInformationPtr si));
+
         const ob::State *s1;
         const ob::State *s2;
         bool wynik;
+
         class_cf(const my_planner* cf_planner) : pb_planner_(cf_planner) {}
+
         bool operator() (const Vertex &vertex1, const Vertex &vertex2)
         {
-
             boost::property_map<og::PRM::Graph, og::PRM::vertex_state_t>::type my_stateProperty;
             s1 = pb_planner_->getStateProperty(vertex1);
             s2 = pb_planner_->getStateProperty(vertex2);
@@ -50,11 +48,6 @@ class class_cf
 
         bool cf_client(const ob::State *state1, const ob::State *state2);
         
-        // ompl::base::State* getStateProperty(const Vertex v1)
-        // {
-        //     return pb_planner_ -> stateProperty_[v1];
-        // }
-
     private:
         const my_planner* pb_planner_;
 

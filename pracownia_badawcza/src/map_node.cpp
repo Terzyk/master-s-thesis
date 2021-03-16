@@ -12,19 +12,22 @@
 
 // global variables for subscirbers
 nav_msgs::OccupancyGrid globalMap;
+
 // variables for points coordinates from file
-visualization_msgs::Marker start2_point;
-visualization_msgs::Marker goal2_point;
-//geometry_msgs::Point start2_point;
-//geometry_msgs::Point goal2_point;
+visualization_msgs::Marker start_point;
+visualization_msgs::Marker goal_point;
+
 // robot coordinates
 visualization_msgs::Marker robot_coord;
+
 // time variables 
 ros::WallTime start_planning, end_planning;
+
 // variable for counting, how many times should the program plan path, if = 1 only one path will be made
 int iter_paths = 1 ;
 // variable for counting, how many times program planned path
 int made_paths = 0;
+
 // robot coord publisher
 ros::Publisher marker_pub;
 
@@ -33,43 +36,28 @@ void mapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg)
   globalMap=*msg;
 }
 
-void start2Callback(const visualization_msgs::Marker::ConstPtr& msg)
+void startCallback(const visualization_msgs::Marker::ConstPtr& msg)
 {
-    start2_point.pose.position.x = msg->pose.position.x;
-    start2_point.pose.position.y = msg->pose.position.y;
-    start2_point.pose.position.z = msg->pose.position.z;
-    start2_point.pose.orientation.x = msg->pose.orientation.x;
-    start2_point.pose.orientation.y = msg->pose.orientation.y;
-    start2_point.pose.orientation.z = msg->pose.orientation.z;
-    start2_point.pose.orientation.w = msg->pose.orientation.w;
+    start_point.pose.position.x = msg->pose.position.x;
+    start_point.pose.position.y = msg->pose.position.y;
+    start_point.pose.position.z = msg->pose.position.z;
+    start_point.pose.orientation.x = msg->pose.orientation.x;
+    start_point.pose.orientation.y = msg->pose.orientation.y;
+    start_point.pose.orientation.z = msg->pose.orientation.z;
+    start_point.pose.orientation.w = msg->pose.orientation.w;
 }
 
-void goal2Callback(const visualization_msgs::Marker::ConstPtr& msg)
+void goalCallback(const visualization_msgs::Marker::ConstPtr& msg)
 {
-    goal2_point.pose.position.x = msg->pose.position.x;
-    goal2_point.pose.position.y = msg->pose.position.y;
-    goal2_point.pose.position.z = msg->pose.position.z;
-    goal2_point.pose.orientation.x = msg->pose.orientation.x;
-    goal2_point.pose.orientation.y = msg->pose.orientation.y;
-    goal2_point.pose.orientation.z = msg->pose.orientation.z;
-    goal2_point.pose.orientation.w = msg->pose.orientation.w;
-}
-/*
-void start2Callback(const visualization_msgs::Marker::ConstPtr& msg)
-{
-  start2_point.x = msg->pose.position.x;
-  start2_point.y = msg->pose.position.y;
-  start2_point.z = msg->pose.position.z;
-  
+    goal_point.pose.position.x = msg->pose.position.x;
+    goal_point.pose.position.y = msg->pose.position.y;
+    goal_point.pose.position.z = msg->pose.position.z;
+    goal_point.pose.orientation.x = msg->pose.orientation.x;
+    goal_point.pose.orientation.y = msg->pose.orientation.y;
+    goal_point.pose.orientation.z = msg->pose.orientation.z;
+    goal_point.pose.orientation.w = msg->pose.orientation.w;
 }
 
-void goal2Callback(const visualization_msgs::Marker::ConstPtr& msg)
-{
-  goal2_point.x = msg->pose.position.x;
-  goal2_point.y = msg->pose.position.y;
-  goal2_point.z = msg->pose.position.z;
-}
-*/
 void robot_move(nav_msgs::Path path)
 {
     robot_coord.header.frame_id = "map";
@@ -87,12 +75,12 @@ void robot_move(nav_msgs::Path path)
     robot_coord.pose.position.z = 0;
     robot_coord.lifetime = ros::Duration();
     robot_coord.header.stamp = ros::Time::now();
-    robot_coord.pose.position.x = start2_point.pose.position.x;
-    robot_coord.pose.position.y = start2_point.pose.position.y;
-    robot_coord.pose.orientation.x = start2_point.pose.orientation.x;
-    robot_coord.pose.orientation.y = start2_point.pose.orientation.y;
-    robot_coord.pose.orientation.z = start2_point.pose.orientation.z;
-    robot_coord.pose.orientation.w = start2_point.pose.orientation.w;
+    robot_coord.pose.position.x = start_point.pose.position.x;
+    robot_coord.pose.position.y = start_point.pose.position.y;
+    robot_coord.pose.orientation.x = start_point.pose.orientation.x;
+    robot_coord.pose.orientation.y = start_point.pose.orientation.y;
+    robot_coord.pose.orientation.z = start_point.pose.orientation.z;
+    robot_coord.pose.orientation.w = start_point.pose.orientation.w;
     marker_pub.publish(robot_coord);
     ros::Duration(0.5).sleep();
     for (int i=0;i<path.poses.size();i++)
@@ -104,12 +92,7 @@ void robot_move(nav_msgs::Path path)
           robot_coord.pose.orientation.y = path.poses[i].pose.orientation.y;
           robot_coord.pose.orientation.z = path.poses[i].pose.orientation.z;
           robot_coord.pose.orientation.w = path.poses[i].pose.orientation.w;
-          // ROS_INFO("x_pos: %f",path.poses[i].pose.position.x);
-          // ROS_INFO("y_pos: %f",path.poses[i].pose.position.y);
-          // ROS_INFO("x: %f",path.poses[i].pose.orientation.x);
-          // ROS_INFO("y: %f",path.poses[i].pose.orientation.y);
-          // ROS_INFO("z: %f",path.poses[i].pose.orientation.z);
-          // ROS_INFO("w: %f",path.poses[i].pose.orientation.w);
+
           marker_pub.publish(robot_coord);
           ros::Duration(0.5).sleep();
       }
@@ -120,27 +103,12 @@ int main(int argc, char **argv)
 {
 
     ros::init(argc, argv, "map_node");
-  //ros::Subscriber sub = n.subscribe("map", 1000, mapCallback);
+
     ros::NodeHandle nodeHandle;
 
-    ros::ServiceClient client = nodeHandle.serviceClient<pracownia_badawcza::AddTwoInts>("add_two_ints",true);
+    ros::ServiceClient client = nodeHandle.serviceClient<pracownia_badawcza::LNP>("LNP",true);
 
-    // pracownia_badawcza::AddTwoInts srv;
-    // srv.request.a = 5;
-    // srv.request.b = 3;
-    
-    // if (client.call(srv))
-    // {
-    //     ROS_INFO("Sum: %ld", (long int)srv.response.sum);
-    // }
-    // else
-    // {
-    //     ROS_ERROR("Failed to call service add_two_ints");
-    // }
-    // std::cin.get();
-    // create node handler
-
-    Planner2D plannerr(client);//,srv);
+    Planner2D plannerr(client);
 
     // setup the ROS loop rate
     ros::Rate loop_rate(10);
@@ -150,38 +118,23 @@ int main(int argc, char **argv)
 
     // occupancy map subscriber
     ros::Subscriber sub = nodeHandle.subscribe("/map", 1000, mapCallback);
+
     // start and goal point subscribers
-    ros::Subscriber nav2_start = nodeHandle.subscribe("/start_point", 1000, start2Callback);
-    ros::Subscriber nav2_goal = nodeHandle.subscribe("/end_point", 1000, goal2Callback);
+    ros::Subscriber nav_start = nodeHandle.subscribe("/start_point", 1000, startCallback);
+    ros::Subscriber nav_goal = nodeHandle.subscribe("/end_point", 1000, goalCallback);
+
     // robot coord publisher
     marker_pub = nodeHandle.advertise<visualization_msgs::Marker>("robot_coordinates", 1000);
 
-    
-
-
-
   while (ros::ok())
     {
-    if ((start2_point.pose.position.x > 0.0 && start2_point.pose.position.y > 0.0) && (goal2_point.pose.position.x > 0.0 && goal2_point.pose.position.y > 0.0 ))
+    if ((start_point.pose.position.x > 0.0 && start_point.pose.position.y > 0.0) && (goal_point.pose.position.x > 0.0 && goal_point.pose.position.y > 0.0 ))
     {
-
-        // srv.request.a = 5;
-        // srv.request.b = 3;
-        
-        // if (client.call(srv))
-        // {
-        //     ROS_INFO("Sum: %ld", (long int)srv.response.sum);
-        // }
-        // else
-        // {
-        //     ROS_ERROR("Failed to call service add_two_ints");
-        // }
-        // std::cin.get();
         nav_msgs::Path plannedPath;
-        // std::cout<<&client<<std::endl;
+
         // planning and measuring time
         start_planning = ros::WallTime::now();
-        plannedPath = plannerr.planPath(globalMap,start2_point,goal2_point);
+        plannedPath = plannerr.planPath(globalMap,start_point,goal_point);
         end_planning = ros::WallTime::now();
         double execution_time = (end_planning - start_planning).toNSec() * 1e-6;
         ROS_INFO_STREAM("Exectution time (ms): " << execution_time);
