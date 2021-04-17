@@ -1,9 +1,7 @@
-float32 s1_x
-float32 s1_y
-float32 s1_yaw
-float32 s2_x
-float32 s2_y
-float32 s2_yaw
+float64 s_x
+float64 s_y
+float64 s_yaw
+int8[] grid_map
 ---
-float32[] factors
+float64[] factors
 

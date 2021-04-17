@@ -13,6 +13,8 @@
 #include <ompl/tools/config/SelfConfig.h>
 #include "pracownia_badawcza/LNP.h"
 #include <cstdlib>
+#include <ompl/base/OptimizationObjective.h>
+#include <ompl/base/Cost.h>
 
 namespace ob = ompl::base;
 
@@ -38,6 +40,9 @@ public:
     
     // extract path
     nav_msgs::Path extractPath(ompl::base::ProblemDefinition* pdef);
+
+    // optimizer
+    ob::OptimizationObjectivePtr getOptimizationCost(const ob::State *s0, const ob::State *s1);
 };
 
 class myMotionValidator : public ob::MotionValidator
@@ -50,6 +55,19 @@ public:
     // implement checkMotion()
     bool checkMotion(const ob::State *s1, const ob::State *s2) const override;
     bool checkMotion(const ob::State *s1, const ob::State *s2, std::pair<ob::State *, double> &lastValid) const override;
+};
+
+
+class myOptimizer : public ob::OptimizationObjective 
+{
+public:
+    myOptimizer(ob::SpaceInformationPtr si) : OptimizationObjective(si)
+    {
+
+    }
+    // implement checkMotion()
+    ob::Cost motionCost(const ob::State *s1, const ob::State *s2) const override;
+    ob::Cost stateCost(const ob::State *s3) const override;
 };
 
 

@@ -65,8 +65,8 @@ void robot_move(nav_msgs::Path path)
     robot_coord.id = 0;
     robot_coord.type = visualization_msgs::Marker::CUBE;
     robot_coord.action = visualization_msgs::Marker::ADD;
-    robot_coord.scale.x = 4.0;
-    robot_coord.scale.y = 1.2;
+    robot_coord.scale.x = 4.045;
+    robot_coord.scale.y = 1.72;
     robot_coord.scale.z = 0.01;
     robot_coord.color.r = 0.0;
     robot_coord.color.g = 0.0;
@@ -94,7 +94,7 @@ void robot_move(nav_msgs::Path path)
           robot_coord.pose.orientation.w = path.poses[i].pose.orientation.w;
 
           marker_pub.publish(robot_coord);
-          ros::Duration(0.5).sleep();
+          ros::Duration(0.05).sleep();
       }
     }
 
@@ -105,6 +105,7 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "map_node");
 
     ros::NodeHandle nodeHandle;
+
 
     ros::ServiceClient client = nodeHandle.serviceClient<pracownia_badawcza::LNP>("LNP",true);
 

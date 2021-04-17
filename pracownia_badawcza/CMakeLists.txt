@@ -4,6 +4,8 @@ project(pracownia_badawcza)
 set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 
 
+catkin_python_setup()
+
 find_package(catkin REQUIRED COMPONENTS
   map_server
   nav_msgs
@@ -81,14 +83,9 @@ target_link_libraries(points ${catkin_LIBRARIES})
 
 
 
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
 catkin_install_python(PROGRAMS src/local_neural_planner.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-catkin_install_python(PROGRAMS src/neural_planner.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
