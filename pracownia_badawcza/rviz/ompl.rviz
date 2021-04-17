@@ -116,7 +116,7 @@ Visualization Manager:
       Marker Topic: /robot_coordinates
       Name: Marker
       Namespaces:
-        robot_coordinates: true
+        {}
       Queue Size: 100
       Value: true
   Enabled: true
@@ -147,7 +147,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 550.515380859375
+      Distance: 607.586669921875
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -155,17 +155,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 226.66824340820312
-        Y: 200.39593505859375
-        Z: 72.23106384277344
+        X: 239.6942138671875
+        Y: 247.7502899169922
+        Z: 74.85630798339844
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.2203975915908813
+      Pitch: 1.515397310256958
       Target Frame: <Fixed Frame>
-      Yaw: 4.733570098876953
+      Yaw: 4.713569641113281
     Saved: ~
 Window Geometry:
   Displays:

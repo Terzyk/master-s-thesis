@@ -1,0 +1,7 @@
+float64 s_x
+float64 s_y
+float64 s_yaw
+int8[] grid_map
+---
+float64[] factors
+
